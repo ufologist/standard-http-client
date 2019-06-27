@@ -1,0 +1,29 @@
+{
+  "name": "standard-http-client",
+  "version": "0.0.1",
+  "description": "符合接口规范的 HTTP 客户端",
+  "main": "src/standard-http-client.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ufologist/standard-http-client.git"
+  },
+  "keywords": [
+    "axios",
+    "http",
+    "client"
+  ],
+  "author": "Sun",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ufologist/standard-http-client/issues"
+  },
+  "homepage": "https://github.com/ufologist/standard-http-client#readme",
+  "dependencies": {
+    "axios": "^0.19.0",
+    "jsonp": "^0.2.1",
+    "qsman": "0.0.3"
+  }
+}
