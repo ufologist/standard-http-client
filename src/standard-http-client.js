@@ -9,11 +9,11 @@ import QsMan from 'qsman';
  */
 class StandardHttpClient {
     /**
-     * @param {object} config AxiosRequestConfig
+     * @param {AxiosRequestConfig} config
      */
     constructor(config) {
         /**
-         * @type AxiosInstance
+         * @type {AxiosInstance}
          */
         this.axios = axios.create(config);
         this.useInterceptors();
@@ -97,7 +97,7 @@ class StandardHttpClient {
     /**
      * 发送请求
      * 
-     * @param {object} config AxiosRequestConfig
+     * @param {AxiosRequestConfig} config 扩展的 AxiosRequestConfig
      * @param {boolean} [config._jsonp]
      * @param {string} [config._jsonpCallback] name of the query string parameter to specify the callback(defaults to `callback`)
      * @return {Promise}
@@ -181,7 +181,7 @@ class StandardHttpClient {
     /**
      * 通过 axios 发送请求
      * 
-     * @param {object} config AxiosRequestConfig
+     * @param {AxiosRequestConfig} config
      * @return {Promise}
      */
     _axios(config) {
@@ -192,7 +192,7 @@ class StandardHttpClient {
     /**
      * 判断接口调用是否成功
      * 
-     * @param {AxiosResponse} response AxiosResponse
+     * @param {AxiosResponse} response
      * @return {boolean}
      */
     _isApiSuccess(response) {
