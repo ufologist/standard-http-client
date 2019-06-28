@@ -1,5 +1,5 @@
 import axios from 'axios';
-import jsonp from 'jsonp';
+import fetchJsonp from 'fetch-jsonp';
 import QsMan from 'qsman';
 
 /**
@@ -143,27 +143,25 @@ class StandardHttpClient {
         var _url = new QsMan(config.url).append(config.params).toString();
         var _jsonpCallback = config._jsonpCallback;
 
-        var promise = new Promise(function(resolve, reject) {
-            jsonp(_url, {
-                param: _jsonpCallback,
-                timeout: _timeout
-            }, function(error, data) {
-                if (error) { // 返回 AxiosError
-                    error.request = 'script';
-                    error.response = null;
-                    error.config = config;
-                    reject(error);
-                } else { // 返回 AxiosResponse
-                    resolve({
-                        data: data,
-                        status: 200,
-                        statusText: 'OK',
-                        headers: {},
-                        config: config,
-                        request: 'script'
-                    });
-                }
+        var promise = fetchJsonp(_url, {
+            timeout: _timeout,
+            jsonpCallback: _jsonpCallback
+        }).then(function(response) {
+            return response.json();
+        }).then(function(data) {
+            return Promise.resolve({ // 返回 AxiosResponse
+                data: data,
+                status: 200,
+                statusText: 'OK',
+                headers: {},
+                config: config,
+                request: 'script'
             });
+        }).catch(function(error) { // 返回 AxiosError
+            error.request = 'script';
+            error.response = null;
+            error.config = config;
+            return Promise.reject(error);
         });
 
         // 兼容 axios 的 Interceptors 机制
