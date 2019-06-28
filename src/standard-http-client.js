@@ -202,7 +202,11 @@ class StandardHttpClient {
      */
     _isApiSuccess(response) {
         var result = response.data;
-        return typeof result === 'object' && (!result.status || result.status === 0);
+        // 判断接口调用是否成功的依据
+        // 1. 返回的数据应该是一个 object
+        // 2. 要么没有 status 字段, 要么 status 字段等于 0
+        return typeof result === 'object'
+            && (typeof result.status === 'undefined' || result.status === 0);
     }
 }
 
