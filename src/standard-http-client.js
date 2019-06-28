@@ -138,7 +138,7 @@ class StandardHttpClient {
      */
     _jsonp(config) {
         var _timeout = parseInt(config.timeout, 10);
-        _timeout = _timeout ? _timeout : this.agent.defaults.timeout;
+        _timeout = isNaN(_timeout) ? this.agent.defaults.timeout : _timeout;
 
         var _url = new QsMan(config.url).append(config.params).toString();
         var _jsonpCallback = config._jsonpCallback;
