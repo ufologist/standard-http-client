@@ -5,7 +5,7 @@ import QsMan from 'qsman';
 /**
  * 符合接口规范的 HTTP 客户端
  * 
- * @see
+ * @see https://github.com/f2e-journey/treasure/blob/master/api.md
  */
 class StandardHttpClient {
     /**
@@ -31,7 +31,7 @@ class StandardHttpClient {
     }
 
     /**
-     * 通过拦截器处理接口调用是否成功
+     * 通过拦截器判断接口调用是否成功
      */
     _isResponseSuccess() {
         this.agent.interceptors.response.use((response) => {
@@ -55,7 +55,7 @@ class StandardHttpClient {
     }
 
     /**
-     * 通过拦截器描述请求的错误
+     * 通过拦截器描述请求的错误信息
      */
     _descResponseError() {
         this.agent.interceptors.response.use(undefined, (error) => {
