@@ -6,7 +6,9 @@ import {
 } from 'rollup-plugin-uglify';
 
 var plugins = [
-    nodeResolve(),
+    nodeResolve({
+        browser: true
+    }),
     commonjs(),
     babel({
         exclude: 'node_modules/**'
