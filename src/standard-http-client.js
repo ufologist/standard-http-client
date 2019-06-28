@@ -120,7 +120,7 @@ class StandardHttpClient {
                 _jsonpCallback: config._jsonpCallback
             });
         } else {
-            promise = this._axios(config);
+            promise = this._dispatchRequest(config);
         }
 
         return promise;
@@ -186,12 +186,12 @@ class StandardHttpClient {
     }
 
     /**
-     * 通过 axios 发送请求
+     * Dispatch a request to the server.
      * 
      * @param {AxiosRequestConfig} config
      * @return {Promise}
      */
-    _axios(config) {
+    _dispatchRequest(config) {
         // axios promise 链: [...interceptors.request, dispatch request, ...interceptors.response]
         return this.axios(config);
     }
