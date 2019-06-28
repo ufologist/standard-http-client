@@ -104,13 +104,15 @@ class StandardHttpClient {
      * 发送请求
      * 
      * @param {AxiosRequestConfig} config 扩展的 AxiosRequestConfig
+     * @param {object} [config._data] 实现类似 jquery ajax 发送数据的机制, get 请求会通过 params 机制发送; post 请求会通过 data 机制发送
      * @param {boolean} [config._jsonp]
      * @param {string} [config._jsonpCallback] name of the query string parameter to specify the callback(defaults to `callback`)
      * @return {Promise}
      */
     send(config) {
-        var promise = null;
+        this._adapterDataOption(config);
 
+        var promise = null;
         if (config._jsonp) {
             promise = this._jsonp({
                 method: 'get',
@@ -124,6 +126,29 @@ class StandardHttpClient {
         }
 
         return promise;
+    }
+
+    /**
+     * 将 config._data 适配为 config.params 和 config.data
+     * 
+     * 当为 post/put/patch 请求时会将 config._data 转成 URL 编码的字符串
+     */
+    _adapterDataOption(config) {
+        if (config._data) {
+            var method = '';
+            if (config.method) {
+                method = config.method.toLowerCase();
+            }
+
+            // request methods 'PUT', 'POST', and 'PATCH' can send request body
+            var hasRequestBodyMethods = ['put', 'post', 'patch'];
+            if (hasRequestBodyMethods.indexOf(method) !== -1) {
+                config.data = typeof config._data === 'object' ?
+                              new QsMan().append(config._data).toString() : config._data;
+            } else {
+                config.params = config._data;
+            }
+        }
     }
 
     /**
