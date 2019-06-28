@@ -59,9 +59,11 @@ class StandardHttpClient {
      */
     _descResponseError() {
         this.agent.interceptors.response.use(undefined, (error) => {
+            var validateStatus = error.config.validateStatus || this.agent.defaults.validateStatus;
+
             var response = error.response;
-            if (response) { // 请求发送成功
-                if (!this._isApiSuccess(response)) { // 接口调用出错
+            if (response) { // 请求发送成功, 即前端能够拿到 HTTP 请求返回的数据
+                if (validateStatus(response.status)) { // HTTP 成功, 但接口调用出错
                     // 错误描述
                     error._desc = '接口调用出错';
                     // 错误分类
@@ -70,7 +72,7 @@ class StandardHttpClient {
                     // 如果接口调用出错但未提供错误码, 错误码默认为 0
                     error._errorCode = response.data && response.data.status ?
                                        response.data.status : 0;
-                } else { // HTTP 请求错误
+                } else { // HTTP 异常
                     error._desc = '网络请求错误';
                     error._errorType = 'H';
                     error._errorCode = response.status;
