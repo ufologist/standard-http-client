@@ -39,8 +39,12 @@ class StandardHttpClient {
             if (this._isApiSuccess(response)) {
                 return Promise.resolve([result.data, response]);
             } else {
-                // TODO 可能为空
-                var error = new Error(result.statusInfo.message);
+                var message = '接口调用出错但未提供错误信息';
+                if (result && result.statusInfo && result.statusInfo.message) {
+                    message = result.statusInfo.message;
+                }
+
+                var error = new Error(message);
                 error.response = response;
                 error.request = response.request;
                 error.config = response.config;
@@ -55,19 +59,21 @@ class StandardHttpClient {
      */
     _descResponseError() {
         this.axios.interceptors.response.use(undefined, (error) => {
-            if (error.response) { // 请求发送成功
-                if (!this._isApiSuccess(error.response)) { // 接口调用出错
+            var response = error.response;
+            if (response) { // 请求发送成功
+                if (!this._isApiSuccess(response)) { // 接口调用出错
                     // 错误描述
                     error._desc = '接口调用出错';
                     // 错误分类
                     error._errorType = 'B';
                     // 错误码
-                    // TODO 可能为空
-                    error._errorCode = error.response.data.status;
+                    // 如果接口调用出错但未提供错误码, 错误码默认为 0
+                    error._errorCode = response.data && response.data.status ?
+                                       response.data.status : 0;
                 } else { // HTTP 请求错误
                     error._desc = '网络请求错误';
                     error._errorType = 'H';
-                    error._errorCode = error.response.status;
+                    error._errorCode = response.status;
                 }
             } else { // 请求发送失败
                 error._desc = '网络请求失败';
@@ -133,6 +139,7 @@ class StandardHttpClient {
     _jsonp(config) {
         var _timeout = parseInt(config.timeout, 10);
         _timeout = _timeout ? _timeout : this.axios.defaults.timeout;
+
         var _url = new QsMan(config.url).append(config.params).toString();
         var _jsonpCallback = config._jsonpCallback;
 
