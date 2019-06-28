@@ -204,7 +204,7 @@ class StandardHttpClient {
      */
     _isApiSuccess(response) {
         var result = response.data;
-        return result && (!result.status || result.status === 0);
+        return typeof result === 'object' && (!result.status || result.status === 0);
     }
 }
 
