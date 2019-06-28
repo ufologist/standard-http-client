@@ -15,7 +15,7 @@ class StandardHttpClient {
         /**
          * @type {AxiosInstance}
          */
-        this.axios = axios.create(config);
+        this.agent = axios.create(config);
         this.useInterceptors();
     }
 
@@ -34,7 +34,7 @@ class StandardHttpClient {
      * 通过拦截器处理接口调用是否成功
      */
     _isResponseSuccess() {
-        this.axios.interceptors.response.use((response) => {
+        this.agent.interceptors.response.use((response) => {
             var result = response.data;
             if (this._isApiSuccess(response)) {
                 return Promise.resolve([result.data, response]);
@@ -58,7 +58,7 @@ class StandardHttpClient {
      * 通过拦截器描述请求的错误
      */
     _descResponseError() {
-        this.axios.interceptors.response.use(undefined, (error) => {
+        this.agent.interceptors.response.use(undefined, (error) => {
             var response = error.response;
             if (response) { // 请求发送成功
                 if (!this._isApiSuccess(response)) { // 接口调用出错
@@ -89,7 +89,7 @@ class StandardHttpClient {
      * 通过拦截器输出请求的错误日志
      */
     _logResponseError() {
-        this.axios.interceptors.response.use(undefined, function(error) {
+        this.agent.interceptors.response.use(undefined, function(error) {
             console.warn(`${error._desc}(${error._errorType}${error._errorCode})`,  
                          error.config.method, error.config.url,
                          error.message,
@@ -138,7 +138,7 @@ class StandardHttpClient {
      */
     _jsonp(config) {
         var _timeout = parseInt(config.timeout, 10);
-        _timeout = _timeout ? _timeout : this.axios.defaults.timeout;
+        _timeout = _timeout ? _timeout : this.agent.defaults.timeout;
 
         var _url = new QsMan(config.url).append(config.params).toString();
         var _jsonpCallback = config._jsonpCallback;
@@ -171,11 +171,11 @@ class StandardHttpClient {
         // 首先放入发送请求的 promise
         var chain = [promise, undefined];
         // 在链路的前面加入 intercept request
-        this.axios.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
+        this.agent.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
             chain.unshift(interceptor.fulfilled, interceptor.rejected);
         });
         // 在链路的后面加入 intercept response
-        this.axios.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
+        this.agent.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
             chain.push(interceptor.fulfilled, interceptor.rejected);
         });
         while (chain.length) {
@@ -193,7 +193,7 @@ class StandardHttpClient {
      */
     _dispatchRequest(config) {
         // axios promise 链: [...interceptors.request, dispatch request, ...interceptors.response]
-        return this.axios(config);
+        return this.agent(config);
     }
 
     /**
