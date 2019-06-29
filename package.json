@@ -2,7 +2,9 @@
   "name": "standard-http-client",
   "version": "0.0.1",
   "description": "符合接口规范的 HTTP 客户端",
-  "main": "dist/standard-http-client.js",
+  "main": "dist/standard-http-client.common.js",
+  "module": "dist/standard-http-client.esm.js",
+  "unpkg": "dist/standard-http-client.js",
   "scripts": {
     "start": "rollup -c",
     "test": "jest"

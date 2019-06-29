@@ -5,23 +5,42 @@ import {
     uglify
 } from 'rollup-plugin-uglify';
 
-var plugins = [
-    nodeResolve({
-        browser: true
-    }),
-    commonjs(),
-    babel({
-        exclude: 'node_modules/**'
-    }),
-    uglify()
-];
+var input = 'src/standard-http-client.js';
+var babelPlugin = babel({
+    exclude: 'node_modules/**'
+});
 
 export default [{
-    input: 'src/standard-http-client.js',
+    input: input,
     output: {
         file: 'dist/standard-http-client.js',
         format: 'umd',
         name: 'StandardHttpClient'
     },
-    plugins: plugins
+    plugins: [
+        nodeResolve({
+            browser: true
+        }),
+        commonjs(),
+        babelPlugin,
+        uglify()
+    ]
+}, {
+    input: input,
+    output: {
+        file: 'dist/standard-http-client.common.js',
+        format: 'cjs'
+    },
+    plugins: [
+        babelPlugin
+    ]
+}, {
+    input: input,
+    output: {
+        file: 'dist/standard-http-client.esm.js',
+        format: 'esm'
+    },
+    plugins: [
+        babelPlugin
+    ]
 }];
