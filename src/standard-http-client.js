@@ -110,7 +110,7 @@ class StandardHttpClient {
      * 
      * @param {AxiosRequestConfig} [config={}] 扩展的 AxiosRequestConfig
      * @param {object} [config._data] 实现类似 jquery ajax 发送数据的机制, get 请求会通过 params 机制发送; post 请求会通过 data 机制发送
-     * @param {boolean} [config._jsonp] 是否通过 JSONP 来发送请求(注意此时 config 仅支持 baseURL, url, params, timeout 参数)
+     * @param {boolean} [config._jsonp] 是否通过 JSONP 来发送请求(注意此时 config 仅支持 baseURL, url, params, timeout, transformResponse 参数)
      * @param {string} [config._jsonpCallback] name of the query string parameter to specify the callback(defaults to `callback`)
      * @return {Promise}
      */
@@ -125,6 +125,7 @@ class StandardHttpClient {
                 url: config.url,
                 params: config.params,
                 timeout: config.timeout,
+                transformResponse: config.transformResponse,
                 _jsonpCallback: config._jsonpCallback
             });
         } else {
@@ -165,6 +166,7 @@ class StandardHttpClient {
      * @param {string} [config.baseURL]
      * @param {object} [config.params]
      * @param {number} [config.timeout]
+     * @param {Array<Function>} [config.transformResponse]
      * @param {string} [config._jsonpCallback]
      * @return {Promise}
      */
@@ -184,14 +186,24 @@ class StandardHttpClient {
             config.timeout = this.agent.defaults.timeout;
         }
 
+        var transformResponse = config.transformResponse || this.agent.defaults.transformResponse;
+
         var promise = fetchJsonp(url, {
             timeout: config.timeout,
             jsonpCallback: config._jsonpCallback
         }).then(function(response) {
             return response.json();
         }).then(function(data) {
+            // Support transformResponse config
+            var _data = data;
+            if (transformResponse && Object.prototype.toString.call(transformResponse) === '[object Array]') {
+                transformResponse.forEach(function(fn) {
+                    _data = fn(_data);
+                });
+            }
+
             return Promise.resolve({ // 返回 AxiosResponse
-                data: data,
+                data: _data,
                 status: 200,
                 statusText: 'OK',
                 headers: {},
