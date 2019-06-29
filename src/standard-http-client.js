@@ -66,7 +66,7 @@ class StandardHttpClient {
 
             var response = error.response;
             if (response) { // 请求发送成功, 即前端能够拿到 HTTP 请求返回的数据
-                if (validateStatus(response.status)) { // HTTP 成功, 但接口调用出错
+                if (validateStatus && validateStatus(response.status)) { // HTTP 成功, 但接口调用出错
                     // 错误描述
                     error._desc = '接口调用出错';
                     // 错误分类
@@ -150,10 +150,14 @@ class StandardHttpClient {
             // request methods 'PUT', 'POST', and 'PATCH' can send request body
             var hasRequestBodyMethods = ['put', 'post', 'patch'];
             if (hasRequestBodyMethods.indexOf(method) !== -1) {
-                config.data = typeof config._data === 'object' ?
-                              new QsMan().append(config._data).toString() : config._data;
+                // 已有 config.data 时不做任何操作
+                if (!config.data) {
+                    config.data = typeof config._data === 'object' ?
+                                  new QsMan().append(config._data).toString() : config._data;
+                }
             } else {
-                config.params = config._data;
+                // 已有 config.params 时不做任何操作
+                config.params = config.params || config._data;
             }
         }
     }
