@@ -2,6 +2,9 @@ import axios from 'axios';
 import fetchJsonp from 'fetch-jsonp';
 import QsMan from 'qsman';
 
+import isAbsoluteURL from './helpers/isAbsoluteURL.js';
+import combineURLs from './helpers/combineURLs.js';
+
 /**
  * 符合接口规范的 HTTP 客户端
  * 
@@ -105,19 +108,20 @@ class StandardHttpClient {
     /**
      * 发送请求
      * 
-     * @param {AxiosRequestConfig} config 扩展的 AxiosRequestConfig
+     * @param {AxiosRequestConfig} [config={}] 扩展的 AxiosRequestConfig
      * @param {object} [config._data] 实现类似 jquery ajax 发送数据的机制, get 请求会通过 params 机制发送; post 请求会通过 data 机制发送
-     * @param {boolean} [config._jsonp]
+     * @param {boolean} [config._jsonp] 是否通过 JSONP 来发送请求(注意此时 config 仅支持 baseURL, url, params, timeout 参数)
      * @param {string} [config._jsonpCallback] name of the query string parameter to specify the callback(defaults to `callback`)
      * @return {Promise}
      */
-    send(config) {
+    send(config = {}) {
         this._adapterDataOption(config);
 
         var promise = null;
         if (config._jsonp) {
             promise = this._jsonp({
                 method: 'get',
+                baseURL: config.baseURL,
                 url: config.url,
                 params: config.params,
                 timeout: config.timeout,
@@ -158,21 +162,31 @@ class StandardHttpClient {
      * 
      * @param {object} config
      * @param {string} config.url
+     * @param {string} [config.baseURL]
      * @param {object} [config.params]
      * @param {number} [config.timeout]
      * @param {string} [config._jsonpCallback]
      * @return {Promise}
      */
     _jsonp(config) {
-        var _timeout = parseInt(config.timeout, 10);
-        _timeout = isNaN(_timeout) ? this.agent.defaults.timeout : _timeout;
+        // Support baseURL config
+        var baseURL = config.baseURL || this.agent.defaults.baseURL;
+        if (baseURL && !isAbsoluteURL(config.url)) {
+            config.url = combineURLs(baseURL, config.url);
+        }
 
-        var _url = new QsMan(config.url).append(config.params).toString();
-        var _jsonpCallback = config._jsonpCallback;
+        var url = config.url;
+        if (config.params) {
+            url = new QsMan(url).append(config.params).toString();
+        }
 
-        var promise = fetchJsonp(_url, {
-            timeout: _timeout,
-            jsonpCallback: _jsonpCallback
+        if (!config.timeout) {
+            config.timeout = this.agent.defaults.timeout;
+        }
+
+        var promise = fetchJsonp(url, {
+            timeout: config.timeout,
+            jsonpCallback: config._jsonpCallback
         }).then(function(response) {
             return response.json();
         }).then(function(data) {
