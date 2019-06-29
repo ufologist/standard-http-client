@@ -62,27 +62,36 @@ class StandardHttpClient {
      */
     _descResponseError() {
         this.agent.interceptors.response.use(undefined, (error) => {
-            var validateStatus = error.config.validateStatus || this.agent.defaults.validateStatus;
+            // 如果 transformResponse 执行异常, 进入到拦截器做错误处理,
+            // 此时的 error 是没有 config 的,
+            // 因为 transformResponse 是客户端执行的逻辑, 因此认定为客户端处理出错
+            if (error.config) {
+                var validateStatus = error.config.validateStatus || this.agent.defaults.validateStatus;
 
-            var response = error.response;
-            if (response) { // 请求发送成功, 即前端能够拿到 HTTP 请求返回的数据
-                if (validateStatus && validateStatus(response.status)) { // HTTP 成功, 但接口调用出错
-                    // 错误描述
-                    error._desc = '接口调用出错';
-                    // 错误分类
-                    error._errorType = 'B';
-                    // 错误码
-                    // 如果接口调用出错但未提供错误码, 错误码默认为 0
-                    error._errorCode = response.data && response.data.status ?
-                                       response.data.status : 0;
-                } else { // HTTP 异常
-                    error._desc = '网络请求错误';
-                    error._errorType = 'H';
-                    error._errorCode = response.status;
+                var response = error.response;
+                if (response) { // 请求发送成功, 即前端能够拿到 HTTP 请求返回的数据
+                    if (validateStatus && validateStatus(response.status)) { // HTTP 成功, 但接口调用出错
+                        // 错误描述
+                        error._desc = '接口调用出错';
+                        // 错误分类
+                        error._errorType = 'B';
+                        // 错误码
+                        // 如果接口调用出错但未提供错误码, 错误码默认为 0
+                        error._errorCode = response.data && response.data.status ?
+                                           response.data.status : 0;
+                    } else { // HTTP 异常
+                        error._desc = '网络请求错误';
+                        error._errorType = 'H';
+                        error._errorCode = response.status;
+                    }
+                } else { // 请求发送失败
+                    error._desc = '网络请求失败';
+                    error._errorType = 'A';
+                    error._errorCode = error.message.charCodeAt(0);
                 }
-            } else { // 请求发送失败
-                error._desc = '网络请求失败';
-                error._errorType = 'A';
+            } else {
+                error._desc = '客户端处理出错';
+                error._errorType = 'C';
                 error._errorCode = error.message.charCodeAt(0);
             }
 
@@ -95,8 +104,11 @@ class StandardHttpClient {
      */
     _logResponseError() {
         this.agent.interceptors.response.use(undefined, function(error) {
+            var method = error.config ? error.config.method : undefined;
+            var url = error.config ? error.config.url : undefined;
+
             console.warn(`${error._desc}(${error._errorType}${error._errorCode})`,  
-                         error.config.method, error.config.url,
+                         method, url,
                          error.message,
                          error.config, error.response,
                          error);
