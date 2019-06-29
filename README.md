@@ -56,7 +56,7 @@ httpClient.send({
     console.log(data);
 });
 
-// 通过 _data 参数更便捷
+// 通过 _data 发送数据更便捷
 httpClient.send({
     url: 'https://domain.com/path/to/api',
     _data: {
