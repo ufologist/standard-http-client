@@ -121,7 +121,7 @@ class StandardHttpClient {
      * 发送请求
      * 
      * @param {AxiosRequestConfig} [config={}] 扩展的 AxiosRequestConfig
-     * @param {object} [config._data] 实现类似 jquery ajax 发送数据的机制, get 请求会通过 params 机制发送; post 请求会通过 data 机制发送
+     * @param {object} [config._data] 实现类似 jQuery.ajax 的 data 配置项机制
      * @param {boolean} [config._jsonp] 是否通过 JSONP 来发送请求(注意此时 config 仅支持 baseURL, url, params, timeout, transformResponse 参数)
      * @param {string} [config._jsonpCallback] name of the query string parameter to specify the callback(defaults to `callback`)
      * @return {Promise}
