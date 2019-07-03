@@ -75,25 +75,28 @@ class StandardHttpClient {
                         error._desc = '接口调用出错';
                         // 错误分类
                         error._errorType = 'B';
-                        // 错误码
-                        // 如果接口调用出错但未提供错误码, 错误码默认为 0
-                        error._errorCode = response.data && response.data.status ?
-                                           response.data.status : 0;
+                        // 错误编号
+                        // 如果接口调用出错但未提供错误编号, 错误编号默认为 0
+                        error._errorNumber = response.data && response.data.status ?
+                                             response.data.status : 0;
                     } else { // HTTP 异常
                         error._desc = '网络请求错误';
                         error._errorType = 'H';
-                        error._errorCode = response.status;
+                        error._errorNumber = response.status;
                     }
                 } else { // 请求发送失败
                     error._desc = '网络请求失败';
                     error._errorType = 'A';
-                    error._errorCode = error.message.charCodeAt(0);
+                    error._errorNumber = error.message.charCodeAt(0);
                 }
             } else {
                 error._desc = '客户端处理出错';
                 error._errorType = 'C';
-                error._errorCode = error.message.charCodeAt(0);
+                error._errorNumber = error.message.charCodeAt(0);
             }
+
+            // 错误码
+            error._errorCode = `${error._errorType}${error._errorNumber}`;
 
             return Promise.reject(error);
         });
@@ -107,7 +110,7 @@ class StandardHttpClient {
             var method = error.config ? error.config.method : undefined;
             var url = error.config ? error.config.url : undefined;
 
-            console.warn(`${error._desc}(${error._errorType}${error._errorCode})`,  
+            console.warn(`${error._desc}(${error._errorCode})`,  
                          method, url,
                          error.message,
                          error.config, error.response,

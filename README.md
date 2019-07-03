@@ -26,7 +26,8 @@
 * 规范化请求的错误处理, 生成标准的错误码, 并输出错误日志
   * `error._desc` 错误描述
   * `error._errorType` 错误分类
-  * `error._errorCode` 错误码
+  * `error._errorNumber` 错误编号, 例如: `404`
+  * `error._errorCode` 错误码, 例如: `H404`
 * 预留扩展机制, 便于实现定制需求(例如统一开启/关闭 loading)
 
 ### 次要功能
