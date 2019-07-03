@@ -31,6 +31,7 @@ class StandardHttpClient {
         this._isResponseSuccess();
         this._descResponseError();
         this._logResponseError();
+        this._hook();
     }
 
     /**
@@ -119,6 +120,65 @@ class StandardHttpClient {
             return Promise.reject(error);
         });
     }
+
+    /**
+     * 通过拦截器增加发送请求的 hook
+     * 
+     * ```
+     *                     ┌─> 成功 ─> afterSend
+     * beforeSend ─> send ─┤
+     *                     └─> 失败 ─> afterSend ─> handleError
+     * ```
+     */
+    _hook() {
+        this.agent.interceptors.request.use((config) => {
+            try {
+                this.beforeSend(config);
+            } catch (e) {
+                console.error('beforeSend', e);
+            }
+            return config;
+        });
+
+        this.agent.interceptors.response.use(function(response) {
+            try {
+                this.afterSend(response);
+            } catch (e) {
+                console.error('afterSend response', e);
+            }
+            return response;
+        }, (error) => {
+            try {
+                this.afterSend(error);
+                this.handleError(error);
+            } catch (e) {
+                console.error('afterSend error', e);
+            }
+            return Promise.reject(error);
+        });
+    }
+
+    /**
+     * 发送请求之前统一要做的事情
+     * 
+     * @abstract
+     * @param {AxiosRequestConfig} config 
+     */
+    beforeSend(config) {}
+    /**
+     * 发送请求之后统一要做的事情
+     * 
+     * @abstract
+     * @param {AxiosResponse | AxiosError} responseOrError 
+     */
+    afterSend(responseOrError) {}
+    /**
+     * 请求出错之后如何处理错误
+     * 
+     * @abstract
+     * @param {AxiosError} error
+     */
+    handleError(error) {}
 
     /**
      * 发送请求

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+* v0.0.2 2019-7-3
+
+  * 新增 `_errorNumber` 字段用于放置错误编号(例如: `404`)
+  * **修改 `_errorCode` 字段用于放置错误码(例如: `H404`), 原来放置的是错误编号**
+  * 通过拦截器增加发送请求的 hook(`beforeSend`, `afterSend`, `handleError`)
+
 * v0.0.1 2019-6-29
 
   * 初始版本
