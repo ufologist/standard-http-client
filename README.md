@@ -71,6 +71,39 @@ httpClient.send({
 });
 ```
 
+### hook 机制
+
+```javascript
+import StandardHttpClient from 'standard-http-client';
+
+class HttpClient extends StandardHttpClient {
+    constructor(config) {
+        super(config);
+    }
+
+    beforeSend(config) {
+        console.log('before send', config);
+    }
+    afterSend(responseOrError) {
+        console.log('after send', responseOrError);
+    }
+    handleError(error) {
+        console.log('handle error', error);
+    }
+}
+
+var httpClient = new HttpClient({ // instance axios Request Config
+    withCredentials: true,
+    timeout: 10000
+});
+
+httpClient.send({ // axios Request Config
+    url: 'https://domain.com/path/to/api'
+}).then(function([data, response]) {
+    console.log(data);
+});
+```
+
 ### 扩展拦截器
 
 ```javascript

@@ -106,6 +106,8 @@ function () {
       this._descResponseError();
 
       this._logResponseError();
+
+      this._hook();
     }
     /**
      * 通过拦截器判断接口调用是否成功
@@ -160,28 +162,30 @@ function () {
               // 错误描述
               error._desc = '接口调用出错'; // 错误分类
 
-              error._errorType = 'B'; // 错误码
-              // 如果接口调用出错但未提供错误码, 错误码默认为 0
+              error._errorType = 'B'; // 错误编号
+              // 如果接口调用出错但未提供错误编号, 错误编号默认为 0
 
-              error._errorCode = response.data && response.data.status ? response.data.status : 0;
+              error._errorNumber = response.data && response.data.status ? response.data.status : 0;
             } else {
               // HTTP 异常
               error._desc = '网络请求错误';
               error._errorType = 'H';
-              error._errorCode = response.status;
+              error._errorNumber = response.status;
             }
           } else {
             // 请求发送失败
             error._desc = '网络请求失败';
             error._errorType = 'A';
-            error._errorCode = error.message.charCodeAt(0);
+            error._errorNumber = error.message.charCodeAt(0);
           }
         } else {
           error._desc = '客户端处理出错';
           error._errorType = 'C';
-          error._errorCode = error.message.charCodeAt(0);
-        }
+          error._errorNumber = error.message.charCodeAt(0);
+        } // 错误码
 
+
+        error._errorCode = "".concat(error._errorType).concat(error._errorNumber);
         return Promise.reject(error);
       });
     }
@@ -195,10 +199,84 @@ function () {
       this.agent.interceptors.response.use(undefined, function (error) {
         var method = error.config ? error.config.method : undefined;
         var url = error.config ? error.config.url : undefined;
-        console.warn("".concat(error._desc, "(").concat(error._errorType).concat(error._errorCode, ")"), method, url, error.message, error.config, error.response, error);
+        console.warn("".concat(error._desc, "(").concat(error._errorCode, ")"), method, url, error.message, error.config, error.response, error);
         return Promise.reject(error);
       });
     }
+    /**
+     * 通过拦截器增加发送请求的 hook
+     * 
+     * ```
+     *                     ┌─> 成功 ─> afterSend
+     * beforeSend ─> send ─┤
+     *                     └─> 失败 ─> afterSend ─> handleError
+     * ```
+     */
+
+  }, {
+    key: "_hook",
+    value: function _hook() {
+      var _this3 = this;
+
+      this.agent.interceptors.request.use(function (config) {
+        try {
+          _this3.beforeSend(config);
+        } catch (e) {
+          console.error('beforeSend', e);
+        }
+
+        return config;
+      });
+      this.agent.interceptors.response.use(function (response) {
+        try {
+          this.afterSend(response);
+        } catch (e) {
+          console.error('afterSend response', e);
+        }
+
+        return response;
+      }, function (error) {
+        try {
+          _this3.afterSend(error);
+
+          _this3.handleError(error);
+        } catch (e) {
+          console.error('afterSend error', e);
+        }
+
+        return Promise.reject(error);
+      });
+    }
+    /**
+     * 发送请求之前统一要做的事情
+     * 
+     * @abstract
+     * @param {AxiosRequestConfig} config 
+     */
+
+  }, {
+    key: "beforeSend",
+    value: function beforeSend(config) {}
+    /**
+     * 发送请求之后统一要做的事情
+     * 
+     * @abstract
+     * @param {AxiosResponse | AxiosError} responseOrError 
+     */
+
+  }, {
+    key: "afterSend",
+    value: function afterSend(responseOrError) {}
+    /**
+     * 请求出错之后如何处理错误
+     * 
+     * @abstract
+     * @param {AxiosError} error
+     */
+
+  }, {
+    key: "handleError",
+    value: function handleError(error) {}
     /**
      * 发送请求
      * 
