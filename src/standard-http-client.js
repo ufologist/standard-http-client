@@ -231,6 +231,9 @@ class StandardHttpClient {
      * 将 config._data 适配为 config.params 和 config.data
      * 
      * 当为 post/put/patch 请求时会将 config._data 转成 URL 编码的字符串
+     * 
+     * @param {AxiosRequestConfig} 扩展的 AxiosRequestConfig
+     * @param {object} config._data 实现类似 jQuery.ajax 的 data 配置项机制
      */
     _adapterDataOption(config) {
         if (config._data) {
