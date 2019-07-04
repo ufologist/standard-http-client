@@ -28,10 +28,10 @@ class StandardHttpClient {
      * 子类可以继承此方法来添加自己的拦截器
      */
     useInterceptors() {
+        this._hook();
         this._isResponseSuccess();
         this._descResponseError();
         this._logResponseError();
-        this._hook();
     }
 
     /**
@@ -132,28 +132,16 @@ class StandardHttpClient {
      */
     _hook() {
         this.agent.interceptors.request.use((config) => {
-            try {
-                this.beforeSend(config);
-            } catch (e) {
-                console.error('beforeSend', e);
-            }
+            this.beforeSend(config);
             return config;
         });
 
-        this.agent.interceptors.response.use(function(response) {
-            try {
-                this.afterSend(response);
-            } catch (e) {
-                console.error('afterSend response', e);
-            }
+        this.agent.interceptors.response.use((response) => {
+            this.afterSend(response);
             return response;
         }, (error) => {
-            try {
-                this.afterSend(error);
-                this.handleError(error);
-            } catch (e) {
-                console.error('afterSend error', e);
-            }
+            this.afterSend(error);
+            this.handleError(error);
             return Promise.reject(error);
         });
     }
