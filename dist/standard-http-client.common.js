@@ -101,13 +101,15 @@ function () {
   _createClass(StandardHttpClient, [{
     key: "useInterceptors",
     value: function useInterceptors() {
+      this._hook();
+
       this._isResponseSuccess();
 
       this._descResponseError();
 
-      this._logResponseError();
+      this._handleError();
 
-      this._hook();
+      this._logResponseError();
     }
     /**
      * 通过拦截器判断接口调用是否成功
@@ -179,15 +181,27 @@ function () {
             error._errorNumber = error.message.charCodeAt(0);
           }
         } else {
-          error._desc = '客户端处理出错';
-          error._errorType = 'C';
-          error._errorNumber = error.message.charCodeAt(0);
+          _this2._descClientError(error);
         } // 错误码
 
 
         error._errorCode = "".concat(error._errorType).concat(error._errorNumber);
         return Promise.reject(error);
       });
+    }
+    /**
+     * 描述客户端错误
+     * 
+     * @param {Error} error 
+     */
+
+  }, {
+    key: "_descClientError",
+    value: function _descClientError(error) {
+      error._desc = '客户端处理出错';
+      error._errorType = 'C';
+      error._errorNumber = error.message.charCodeAt(0);
+      error._errorCode = "".concat(error._errorType).concat(error._errorNumber);
     }
     /**
      * 通过拦截器输出请求的错误日志
@@ -209,7 +223,7 @@ function () {
      * ```
      *                     ┌─> 成功 ─> afterSend
      * beforeSend ─> send ─┤
-     *                     └─> 失败 ─> afterSend ─> handleError
+     *                     └─> 失败 ─> afterSend
      * ```
      */
 
@@ -219,29 +233,40 @@ function () {
       var _this3 = this;
 
       this.agent.interceptors.request.use(function (config) {
-        try {
-          _this3.beforeSend(config);
-        } catch (e) {
-          console.error('beforeSend', e);
-        }
+        _this3.beforeSend(config);
 
         return config;
       });
       this.agent.interceptors.response.use(function (response) {
-        try {
-          this.afterSend(response);
-        } catch (e) {
-          console.error('afterSend response', e);
-        }
+        _this3.afterSend(response);
 
         return response;
       }, function (error) {
-        try {
-          _this3.afterSend(error);
+        _this3.afterSend(error);
 
-          _this3.handleError(error);
+        return Promise.reject(error);
+      });
+    }
+    /**
+     * 通过拦截器处理请求的错误
+     */
+
+  }, {
+    key: "_handleError",
+    value: function _handleError() {
+      var _this4 = this;
+
+      this.agent.interceptors.response.use(undefined, function (error) {
+        try {
+          _this4.handleError(error);
         } catch (e) {
-          console.error('afterSend error', e);
+          e.response = error.response;
+          e.request = error.request;
+          e.config = error.config;
+
+          _this4._descClientError(e);
+
+          throw e;
         }
 
         return Promise.reject(error);
