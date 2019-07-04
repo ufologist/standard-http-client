@@ -31,6 +31,7 @@ class StandardHttpClient {
         this._hook();
         this._isResponseSuccess();
         this._descResponseError();
+        this._handleError();
         this._logResponseError();
     }
 
@@ -91,9 +92,7 @@ class StandardHttpClient {
                     error._errorNumber = error.message.charCodeAt(0);
                 }
             } else {
-                error._desc = '客户端处理出错';
-                error._errorType = 'C';
-                error._errorNumber = error.message.charCodeAt(0);
+                this._descClientError(error);
             }
 
             // 错误码
@@ -101,6 +100,18 @@ class StandardHttpClient {
 
             return Promise.reject(error);
         });
+    }
+
+    /**
+     * 描述客户端错误
+     * 
+     * @param {Error} error 
+     */
+    _descClientError(error) {
+        error._desc = '客户端处理出错';
+        error._errorType = 'C';
+        error._errorNumber = error.message.charCodeAt(0);
+        error._errorCode = `${error._errorType}${error._errorNumber}`;
     }
 
     /**
@@ -127,7 +138,7 @@ class StandardHttpClient {
      * ```
      *                     ┌─> 成功 ─> afterSend
      * beforeSend ─> send ─┤
-     *                     └─> 失败 ─> afterSend ─> handleError
+     *                     └─> 失败 ─> afterSend
      * ```
      */
     _hook() {
@@ -141,7 +152,25 @@ class StandardHttpClient {
             return response;
         }, (error) => {
             this.afterSend(error);
-            this.handleError(error);
+            return Promise.reject(error);
+        });
+    }
+
+    /**
+     * 通过拦截器处理请求的错误
+     */
+    _handleError() {
+        this.agent.interceptors.response.use(undefined, (error) => {
+            try {
+                this.handleError(error);
+            } catch (e) {
+                e.response = error.response;
+                e.request = error.request;
+                e.config = error.config;
+
+                this._descClientError(e);
+                throw e;
+            }
             return Promise.reject(error);
         });
     }
