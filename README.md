@@ -104,6 +104,8 @@ httpClient.send({ // axios Request Config
 });
 ```
 
+参考实现: [shc-pc](https://github.com/ufologist/shc-pc)
+
 ### 扩展拦截器
 
 ```javascript
