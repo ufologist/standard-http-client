@@ -1,6 +1,18 @@
+import {
+    spawn
+} from 'child_process';
+
 import 'babel-polyfill';
 
 import StandardHttpClient from '../src/standard-http-client.js'
+
+var mockServer = spawn('node', ['test/mock-server.js']);
+mockServer.stdout.on('data', (data) => {
+    console.log(`mockServer stdout: ${data}`);
+});
+mockServer.stderr.on('data', (data) => {
+    console.log(`mockServer stderr: ${data}`);
+});
 
 // TODO JSONP 测试不了
 describe('发送 HTTP 请求', function() {
@@ -161,4 +173,8 @@ describe('接口调用', function() {
             expect(error._errorCode.charAt(0)).toBe('C');
         }
     });
+});
+
+afterAll(function() {
+    mockServer.kill();
 });
