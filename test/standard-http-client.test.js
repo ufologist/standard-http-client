@@ -6,12 +6,23 @@ import 'babel-polyfill';
 
 import StandardHttpClient from '../src/standard-http-client.js'
 
-var mockServer = spawn('node', ['test/mock-server.js']);
-mockServer.stdout.on('data', (data) => {
-    console.log(`mockServer stdout: ${data}`);
+var mockServer;
+beforeAll(function() {
+    return new Promise(function(resolve, reject) {
+        mockServer = spawn('node', ['test/mock-server.js']);
+        mockServer.stdout.on('data', (data) => {
+            console.log(`mockServer stdout: ${data}`);
+            resolve();
+        });
+        mockServer.stderr.on('data', (data) => {
+            console.log(`mockServer stderr: ${data}`);
+            reject();
+        });
+    });
 });
-mockServer.stderr.on('data', (data) => {
-    console.log(`mockServer stderr: ${data}`);
+
+afterAll(function() {
+    mockServer.kill();
 });
 
 // TODO JSONP 测试不了
@@ -173,8 +184,4 @@ describe('接口调用', function() {
             expect(error._errorCode.charAt(0)).toBe('C');
         }
     });
-});
-
-afterAll(function() {
-    mockServer.kill();
 });
