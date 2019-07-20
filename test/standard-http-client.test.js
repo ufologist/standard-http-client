@@ -272,7 +272,7 @@ describe('继承', function() {
     test('beforeSend', async () => {
         class Shc extends StandardHttpClient {
             beforeSend(config) {
-                config.baseURL = 'http://localhost:8001';
+                config.baseURL = 'http://localhost:8000';
             }
         }
 
@@ -281,7 +281,7 @@ describe('继承', function() {
             url: '/api'
         });
         expect(data).toBe('data');
-        expect(response.config.baseURL).toBe('http://localhost:8001');
+        expect(response.config.baseURL).toBe('http://localhost:8000');
     });
 
     test('afterSend-response', async () => {
@@ -296,7 +296,7 @@ describe('继承', function() {
 
         var shc = new Shc();
         var [data] = await shc.send({
-            url: 'http://localhost:8001/api'
+            url: 'http://localhost:8000/api'
         });
         expect(data).toBe('data1');
     });
@@ -314,7 +314,7 @@ describe('继承', function() {
         expect.assertions(8);
         try {
             await shc.send({
-                url: 'http://localhost:8001/api-404'
+                url: 'http://localhost:8000/api-404'
             });
         } catch (error) {
             expect(error._extDesc).toBe('网络请求404了');
@@ -341,7 +341,7 @@ describe('继承', function() {
         expect.assertions(8);
         try {
             await shc.send({
-                url: 'http://localhost:8001/api-404'
+                url: 'http://localhost:8000/api-404'
             });
         } catch (error) {
             expect(error._extDesc).toBe('出错了吧');
@@ -367,7 +367,7 @@ describe('继承', function() {
         expect.assertions(4);
         try {
             await shc.send({
-                url: 'http://localhost:8001/api-404'
+                url: 'http://localhost:8000/api-404'
             });
         } catch (error) {
             expect(error._desc).toBe('客户端处理出错');
