@@ -4,7 +4,7 @@ import {
 
 import 'babel-polyfill';
 
-import StandardHttpClient from '../src/standard-http-client.js'
+import StandardHttpClient from '../src/standard-http-client.js';
 
 var mockServer;
 beforeAll(function() {
@@ -20,7 +20,6 @@ beforeAll(function() {
         });
     });
 });
-
 afterAll(function() {
     mockServer.kill();
 });
@@ -183,5 +182,88 @@ describe('接口调用', function() {
             expect(error._errorNumber).not.toBeNull();
             expect(error._errorCode.charAt(0)).toBe('C');
         }
+    });
+});
+
+describe('适配 _data 参数', function() {
+    test('GET 请求', async () => {
+        var shc = new StandardHttpClient();
+        var [data, response] = await shc.send({
+            url: 'http://localhost:8000/api',
+            _data: {
+                a: 1,
+                b: 2
+            }
+        });
+
+        expect(data).toBe('data');
+        expect(response.config.params).toEqual({a: 1, b: 2});
+    });
+
+    test('GET 请求-优先 params 参数', async () => {
+        var shc = new StandardHttpClient();
+        var [data, response] = await shc.send({
+            url: 'http://localhost:8000/api',
+            params: {
+                a: 11,
+                b: 22
+            },
+            _data: {
+                a: 1,
+                b: 2
+            }
+        });
+
+        expect(data).toBe('data');
+        expect(response.config.params).toEqual({
+            a: 11,
+            b: 22
+        });
+    });
+
+    test('POST 请求', async () => {
+        var shc = new StandardHttpClient();
+        var [data, response] = await shc.send({
+            method: 'post',
+            url: 'http://localhost:8000/api',
+            _data: {
+                a: 1,
+                b: 2
+            }
+        });
+
+        expect(data).toBe('data');
+        expect(response.config.data).toBe('a=1&b=2');
+    });
+
+    test('POST 请求-不处理非 object 类型', async () => {
+        var shc = new StandardHttpClient();
+        var [data, response] = await shc.send({
+            method: 'post',
+            url: 'http://localhost:8000/api',
+            _data: '{"a":1,"b":2}'
+        });
+
+        expect(data).toBe('data');
+        expect(response.config.data).toBe('{"a":1,"b":2}');
+    });
+
+    test('POST 请求-优先 data 参数', async () => {
+        var shc = new StandardHttpClient();
+        var [data, response] = await shc.send({
+            method: 'post',
+            url: 'http://localhost:8000/api',
+            data: {
+                a: 11,
+                b: 22
+            },
+            _data: {
+                a: 1,
+                b: 2
+            }
+        });
+
+        expect(data).toBe('data');
+        expect(response.config.data).toBe('{"a":11,"b":22}');
     });
 });
