@@ -183,7 +183,7 @@ class StandardHttpClient {
      */
     beforeSend(config) {}
     /**
-     * 发送请求之后统一要做的事情
+     * 请求完成之后统一要做的事情
      * 
      * @abstract
      * @param {AxiosResponse | AxiosError} responseOrError 
