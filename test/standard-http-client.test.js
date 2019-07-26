@@ -101,13 +101,13 @@ describe('接口调用', function() {
         expect(data).toBe('data');
     });
 
-    test('没有返回接口规范的数据格式', async () => {
+    test('接口返回空数据', async () => {
         var shc = new StandardHttpClient();
 
         expect.assertions(8);
         try {
             await shc.send({
-                url: 'http://localhost:8000/api-response-not-standard'
+                url: 'http://localhost:8000/api-response-empty'
             });
         } catch (error) {
             expect(error.response).not.toBeNull();
@@ -265,6 +265,65 @@ describe('适配 _data 参数', function() {
 
         expect(data).toBe('data');
         expect(response.config.data).toBe('{"a":11,"b":22}');
+    });
+});
+
+describe('适配接口数据以符合接口规范', function() {
+    // 注意这里的 data 是原始数据, 即大部分情况都是 string 类型
+    // 默认的 transformResponse 是对 data 做了 JSON.parse
+    function transformResponse(data) {
+        var _data = JSON.parse(data);
+
+        var standardData = {
+            status: 0,
+            data: null,
+            statusInfo: {
+                message: '',
+                detail: ''
+            }
+        };
+
+        standardData.status = _data.code;
+        standardData.data = _data.res;
+        standardData.statusInfo.message = _data.message;
+
+        return standardData;
+    }
+
+    test('接口调用成功', async () => {
+        var shc = new StandardHttpClient();
+
+        // 针对单个差异化的接口做适配
+        var [data] = await shc.send({
+            url: 'http://localhost:8000/api-response-not-standard',
+            transformResponse: [transformResponse]
+        });
+
+        expect(data).toBe('data');
+    });
+
+    test('接口调用失败', async () => {
+        // 针对整个 client 的接口做适配
+        var shc = new StandardHttpClient({
+            transformResponse: [transformResponse]
+        });
+
+        expect.assertions(5);
+        try {
+            await shc.send({
+                url: 'http://localhost:8000/api-response-not-standard',
+                params: {
+                    code: 2,
+                    message: '接口调用失败了'
+                }
+            });
+        } catch (error) {
+            expect(error.message).toBe('接口调用失败了');
+            expect(error._desc).toBe('接口调用出错');
+            expect(error._errorType).toBe('B');
+            expect(error._errorNumber).toBe(2);
+            expect(error._errorCode).toBe('B2');
+        }
     });
 });
 

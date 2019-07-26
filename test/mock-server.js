@@ -19,8 +19,19 @@ app.all('/api', function (request, response) {
     });
 });
 
-app.get('/api-response-not-standard', function (request, response) {
+app.get('/api-response-empty', function (request, response) {
     response.send('');
+});
+
+app.get('/api-response-not-standard', function (request, response) {
+    var code = request.query.code ? parseInt(request.query.code) : 0;
+    var message = request.query.message ? request.query.message : '';
+
+    response.jsonp({
+        code: code,
+        res: 'data',
+        message: message
+    });
 });
 
 app.listen(port, function() {
