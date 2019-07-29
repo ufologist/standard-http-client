@@ -270,7 +270,7 @@ describe('适配 _data 参数', function() {
 
 describe('适配接口数据以符合接口规范', function() {
     // 注意这里的 data 是原始数据, 即大部分情况都是 string 类型
-    // 默认的 transformResponse 是对 data 做了 JSON.parse
+    // axios 默认的 transformResponse 是对 data 做了 JSON.parse
     function transformResponse(data) {
         var _data = JSON.parse(data);
 

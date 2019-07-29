@@ -69,6 +69,33 @@ httpClient.send({
 }).then(function([data, response]) {
     console.log(data);
 });
+
+// 如果调用的接口不符合接口规范, 可以通过 transformResponse 机制适配接口数据以符合接口规范
+httpClient.send({
+    url: 'https://domain.com/path/to/api',
+    transformResponse: [function(data) {
+        // 注意这里的 data 是原始数据, 即大部分情况都是 string 类型
+        // axios 默认的 transformResponse 是对 data 做了 JSON.parse
+        var _data = JSON.parse(data);
+
+        var standardData = {
+            status: 0,
+            data: null,
+            statusInfo: {
+                message: '',
+                detail: ''
+            }
+        };
+
+        standardData.status = _data.code;
+        standardData.data = _data.res;
+        standardData.statusInfo.message = _data.message;
+
+        return standardData;
+    }]
+}).then(function([data, response]) {
+    console.log(data);
+});
 ```
 
 ### hook 机制
