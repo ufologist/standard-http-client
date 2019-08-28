@@ -17,12 +17,12 @@
 
 [![npm-image](https://nodei.co/npm/standard-http-client.png?downloads=true&downloadRank=true&stars=true)](https://npmjs.com/package/standard-http-client)
 
-符合接口规范的 HTTP 客户端(基于 [axios](https://github.com/axios/axios))
+符合[接口规范](https://github.com/f2e-journey/treasure/blob/master/api.md)的 HTTP 客户端(基于 [axios](https://github.com/axios/axios))
 
 ## 功能
 
 ### 主要功能
-* 遵循接口规范, 当接口调用成功时才会执行 `resolve`, `resolve` 时可以便捷地获取到接口规范中的业务数据
+* 遵循[接口规范](https://github.com/f2e-journey/treasure/blob/master/api.md), 当接口调用成功时才会执行 `resolve`, `resolve` 时可以便捷地获取到接口规范中的业务数据
 * 规范化请求的错误处理, 生成标准的错误码, 并输出错误日志
   * `error._desc` 错误分类的描述, 例如: `接口调用出错`
   * `error._errorType` 错误分类, 例如: `H`
