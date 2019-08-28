@@ -33,6 +33,9 @@
 ### 次要功能
 * 扩展 axios 的配置项 `_jsonp`: 通过 JSONP 机制发送请求, 并支持和 axios 兼容的参数和拦截器
 * 扩展 axios 的配置项 `_data`: 实现类似 [jQuery.ajax 的 data 配置项机制](https://api.jquery.com/jQuery.ajax/)
+  * `GET` 请求时, 适配到 axios 的 `params` 配置项上
+  * `POST/PUT/PATCH` 请求时, 将对象转成 `form-urlencoded` 的字符串, 适配到 axios 的 `data` 配置项上
+  * PS: 针对其他情况, 例如需要传 `JSON` 数据时, 请使用 axios 原有的 `data` 配置项
 
 ## 示例
 
