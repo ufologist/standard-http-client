@@ -252,6 +252,8 @@ class StandardHttpClient {
                 }
             } else {
                 // 已有 config.params 时不做任何操作
+                // XXX axios params 参数对待数组的方式为: a[]=1&a[]=2
+                // 而后端传统的方式为 a=1&a=2
                 config.params = config.params || config._data;
             }
         }
