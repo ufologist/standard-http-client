@@ -165,6 +165,26 @@ describe('接口调用', function() {
         }
     });
 
+    test('失败-提供了 message 信息', async () => {
+        var shc = new StandardHttpClient();
+        expect.assertions(5);
+        try {
+            await shc.send({
+                url: 'http://localhost:8000/api',
+                params: {
+                    status: 2,
+                    onlyMessage: '接口调用失败了'
+                }
+            });
+        } catch (error) {
+            expect(error.message).toBe('接口调用失败了');
+            expect(error._desc).toBe('接口调用出错');
+            expect(error._errorType).toBe('B');
+            expect(error._errorNumber).toBe(2);
+            expect(error._errorCode).toBe('B2');
+        }
+    });
+
     test('客户端处理出错', async () => {
         var shc = new StandardHttpClient();
         expect.assertions(4);

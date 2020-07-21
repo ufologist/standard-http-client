@@ -47,6 +47,8 @@ class StandardHttpClient {
                 var message = '接口调用出错但未提供错误信息';
                 if (result && result.statusInfo && result.statusInfo.message) {
                     message = result.statusInfo.message;
+                } else if (result && result.message) {
+                    message = result.message;
                 }
 
                 var error = new Error(message);

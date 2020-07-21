@@ -8,15 +8,23 @@ var port = process.argv[2] || 8000;
 app.all('/api', function (request, response) {
     var status = request.query.status ? parseInt(request.query.status) : 0;
     var message = request.query.message ? request.query.message : '';
+    var onlyMessage = request.query.onlyMessage ? request.query.onlyMessage : '';
 
-    response.jsonp({
+    var result = {
         status: status,
-        data: 'data',
-        statusInfo: {
+        data: 'data'
+    };
+
+    if (message) {
+        result.statusInfo = {
             message: message,
             detail: ''
-        }
-    });
+        };
+    } else if (onlyMessage) {
+        result.message = onlyMessage;
+    }
+
+    response.jsonp(result);
 });
 
 app.get('/api-response-empty', function (request, response) {

@@ -126,6 +126,8 @@ function () {
 
           if (result && result.statusInfo && result.statusInfo.message) {
             message = result.statusInfo.message;
+          } else if (result && result.message) {
+            message = result.message;
           }
 
           var error = new Error(message);
@@ -279,7 +281,7 @@ function () {
     key: "beforeSend",
     value: function beforeSend(config) {}
     /**
-     * 发送请求之后统一要做的事情
+     * 请求完成之后统一要做的事情
      * 
      * @abstract
      * @param {AxiosResponse | AxiosError} responseOrError 
@@ -337,6 +339,9 @@ function () {
      * 将 config._data 适配为 config.params 和 config.data
      * 
      * 当为 post/put/patch 请求时会将 config._data 转成 URL 编码的字符串
+     * 
+     * @param {AxiosRequestConfig} 扩展的 AxiosRequestConfig
+     * @param {object} config._data 实现类似 jQuery.ajax 的 data 配置项机制
      */
 
   }, {
@@ -359,6 +364,8 @@ function () {
           }
         } else {
           // 已有 config.params 时不做任何操作
+          // XXX axios params 参数对待数组的方式为: a[]=1&a[]=2
+          // 而后端传统的方式为 a=1&a=2
           config.params = config.params || config._data;
         }
       }
