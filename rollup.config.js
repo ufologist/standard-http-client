@@ -22,24 +22,4 @@ export default [{
         typescript(),
         uglify()
     ]
-}, {
-    input: input,
-    output: {
-        file: 'dist/standard-http-client.common.js',
-        format: 'cjs'
-    },
-    plugins: [
-        commonjs(),
-        typescript(),
-    ]
-}, {
-    input: input,
-    output: {
-        file: 'dist/standard-http-client.esm.js',
-        format: 'esm'
-    },
-    plugins: [
-        commonjs(),
-        typescript(),
-    ]
 }];
