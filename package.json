@@ -6,12 +6,19 @@
   "module": "dist/esm/standard-http-client.js",
   "unpkg": "dist/standard-http-client.js",
   "scripts": {
-    "start": "rollup -c",
-    "build": "npm run build:umd && npm run build:commonjs && npm run build:esm",
+    "start": "jest --watch",
+    "test": "jest --coverage",
+    "clean": "del-cli dist/standard-http-client.js dist/commonjs dist/esm coverage -f",
+    "build": "npm run clean && npm run test && npm run build:umd && npm run build:commonjs && npm run build:esm",
     "build:umd": "rollup -c",
     "build:commonjs": "tsc --module CommonJS --outDir dist/commonjs",
     "build:esm": "tsc --module ES2015 --outDir dist/esm",
-    "test": "jest --coverage"
+    "prepublishOnly": "npm run build",
+    "minor:beta": "release-it minor --preRelease=beta",
+    "patch:beta": "release-it patch --preRelease=beta",
+    "release:beta": "release-it --preRelease",
+    "minor": "release-it minor",
+    "patch": "release-it patch"
   },
   "repository": {
     "type": "git",
@@ -41,8 +48,10 @@
     "@rollup/plugin-typescript": "^8.2.5",
     "@types/jest": "^26.0.21",
     "coveralls": "^3.0.3",
+    "del-cli": "^4.0.1",
     "express": "^4.17.1",
     "jest": "^26.6.3",
+    "release-it": "^14.11.5",
     "rollup": "^1.32.1",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.1.0",
