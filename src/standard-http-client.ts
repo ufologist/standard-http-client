@@ -50,7 +50,7 @@ class StandardHttpClient {
      * 
      * @param config 
      */
-    constructor(config: AxiosRequestConfig) {
+    constructor(config?: AxiosRequestConfig) {
         this.agent = axios.create(config);
         this.useInterceptors();
     }

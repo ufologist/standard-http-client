@@ -1,10 +1,9 @@
+// @ts-nocheck
 import {
     spawn
 } from 'child_process';
 
-import 'babel-polyfill';
-
-import StandardHttpClient from '../src/standard-http-client.js';
+import StandardHttpClient from '../src/standard-http-client';
 
 var mockServer;
 beforeAll(function() {
@@ -12,7 +11,7 @@ beforeAll(function() {
         mockServer = spawn('node', ['test/mock-server.js']);
         mockServer.stdout.on('data', (data) => {
             console.log(`mockServer stdout: ${data}`);
-            resolve();
+            resolve(1);
         });
         mockServer.stderr.on('data', (data) => {
             console.log(`mockServer stderr: ${data}`);
@@ -192,6 +191,7 @@ describe('接口调用', function() {
             await shc.send({
                 url: 'http://localhost:8000/api',
                 transformResponse: [function(data) {
+                    // @ts-ignore
                     console.log(a.b);
                     return data;
                 }]
@@ -384,6 +384,7 @@ describe('继承', function() {
             afterSend(responseOrError) {
                 if (responseOrError instanceof Error) {
                     var error = responseOrError;
+                    // @ts-ignore
                     error._extDesc = '网络请求404了';
                 }
             }
@@ -438,6 +439,7 @@ describe('继承', function() {
     test('handleError-自己出错了', async () => {
         class Shc extends StandardHttpClient {
             handleError(error) {
+                // @ts-ignore
                 console.log(a.b);
             }
         }

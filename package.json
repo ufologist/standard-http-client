@@ -7,7 +7,11 @@
   "unpkg": "dist/standard-http-client.js",
   "scripts": {
     "start": "rollup -c",
-    "test": "jest"
+    "build": "npm run build:umd && npm run build:commonjs && npm run build:esm",
+    "build:umd": "rollup -c",
+    "build:commonjs": "tsc --module CommonJS --outDir dist/commonjs",
+    "build:esm": "tsc --module ES2015 --outDir dist/esm",
+    "test": "jest --coverage"
   },
   "repository": {
     "type": "git",
@@ -35,22 +39,15 @@
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^8.2.5",
-    "babel-jest": "^24.1.0",
-    "babel-polyfill": "^6.26.0",
+    "@types/jest": "^26.0.21",
     "coveralls": "^3.0.3",
     "express": "^4.17.1",
-    "jest": "^24.1.0",
+    "jest": "^26.6.3",
     "rollup": "^1.32.1",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.1.0",
     "rollup-plugin-uglify": "^6.0.2",
+    "ts-jest": "^26.5.4",
     "typescript": "^4.4.3"
-  },
-  "jest": {
-    "collectCoverage": true,
-    "coverageReporters": [
-      "text",
-      "lcov"
-    ]
   }
 }
