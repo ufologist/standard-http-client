@@ -1,9 +1,38 @@
-import axios from 'axios';
+import axios, {
+    AxiosError,
+    AxiosInstance,
+    AxiosRequestConfig,
+    AxiosResponse
+} from 'axios';
 import fetchJsonp from 'fetch-jsonp';
 import QsMan from 'qsman';
 
-import isAbsoluteURL from './helpers/isAbsoluteURL.js';
-import combineURLs from './helpers/combineURLs.js';
+import isAbsoluteURL from './helpers/isAbsoluteURL';
+import combineURLs from './helpers/combineURLs';
+
+/**
+ * 扩展的 AxiosRequestConfig
+ */
+interface RequestConfig extends AxiosRequestConfig {
+    /**
+     * 实现类似 jQuery.ajax 的 data 配置项机制
+     */
+    _data?: any;
+
+    /**
+     * 是否通过 JSONP 来发送请求(注意此时 config 仅支持 baseURL, url, params, timeout, transformResponse 参数)
+     */
+    _jsonp?: boolean;
+    /**
+     * name of the query string parameter to specify the callback(defaults to `callback`)
+     */
+    _jsonpCallback?: string;
+}
+
+/**
+ * 返回的请求结果
+ */
+type Response = [data: any, response: AxiosResponse];
 
 /**
  * 符合接口规范的 HTTP 客户端
@@ -12,12 +41,16 @@ import combineURLs from './helpers/combineURLs.js';
  */
 class StandardHttpClient {
     /**
-     * @param {AxiosRequestConfig} config
+     * axios 的实例
      */
-    constructor(config) {
-        /**
-         * @type {AxiosInstance}
-         */
+    agent: AxiosInstance;
+
+    /**
+     * 创建 HTTP 客户端的实例
+     * 
+     * @param config 
+     */
+    constructor(config: AxiosRequestConfig) {
         this.agent = axios.create(config);
         this.useInterceptors();
     }
@@ -39,19 +72,20 @@ class StandardHttpClient {
      * 通过拦截器判断接口调用是否成功
      */
     _isResponseSuccess() {
-        this.agent.interceptors.response.use((response) => {
-            var result = response.data;
+        // @ts-ignore
+        this.agent.interceptors.response.use((response: any) => {
+            const result = response.data;
             if (this._isApiSuccess(response)) {
                 return Promise.resolve([result.data, response]);
             } else {
-                var message = '接口调用出错但未提供错误信息';
+                let message = '接口调用出错但未提供错误信息';
                 if (result && result.statusInfo && result.statusInfo.message) {
                     message = result.statusInfo.message;
                 } else if (result && result.message) {
                     message = result.message;
                 }
 
-                var error = new Error(message);
+                const error: any = new Error(message);
                 error.response = response;
                 error.request = response.request;
                 error.config = response.config;
@@ -70,9 +104,9 @@ class StandardHttpClient {
             // 此时的 error 是没有 config 的,
             // 因为 transformResponse 是客户端执行的逻辑, 因此认定为客户端处理出错
             if (error.config) {
-                var validateStatus = error.config.validateStatus || this.agent.defaults.validateStatus;
+                const validateStatus = error.config.validateStatus || this.agent.defaults.validateStatus;
 
-                var response = error.response;
+                const response = error.response;
                 if (response) { // 请求发送成功, 即前端能够拿到 HTTP 请求返回的数据
                     if (validateStatus && validateStatus(response.status)) { // HTTP 成功, 但接口调用出错
                         // 错误描述
@@ -109,7 +143,7 @@ class StandardHttpClient {
      * 
      * @param {Error} error 
      */
-    _descClientError(error) {
+    _descClientError(error: any) {
         error._desc = '客户端处理出错';
         error._errorType = 'C';
         error._errorNumber = error.message.charCodeAt(0);
@@ -121,8 +155,8 @@ class StandardHttpClient {
      */
     _logResponseError() {
         this.agent.interceptors.response.use(undefined, function(error) {
-            var method = error.config ? error.config.method : undefined;
-            var url = error.config ? error.config.url : undefined;
+            const method = error.config ? error.config.method : undefined;
+            const url = error.config ? error.config.url : undefined;
 
             console.warn(`${error._desc}(${error._errorCode})`,  
                          method, url,
@@ -165,7 +199,7 @@ class StandardHttpClient {
         this.agent.interceptors.response.use(undefined, (error) => {
             try {
                 this.handleError(error);
-            } catch (e) {
+            } catch (e: any) {
                 e.response = error.response;
                 e.request = error.request;
                 e.config = error.config;
@@ -181,37 +215,33 @@ class StandardHttpClient {
      * 发送请求之前统一要做的事情
      * 
      * @abstract
-     * @param {AxiosRequestConfig} config 
+     * @param config 
      */
-    beforeSend(config) {}
+    beforeSend(config: AxiosRequestConfig) {}
     /**
      * 请求完成之后统一要做的事情
      * 
      * @abstract
-     * @param {AxiosResponse | AxiosError} responseOrError 
+     * @param responseOrError 
      */
-    afterSend(responseOrError) {}
+    afterSend(responseOrError: AxiosResponse | AxiosError) {}
     /**
      * 请求出错之后如何处理错误
      * 
      * @abstract
-     * @param {AxiosError} error
+     * @param error
      */
-    handleError(error) {}
+    handleError(error: AxiosError) {}
 
     /**
      * 发送请求
      * 
-     * @param {AxiosRequestConfig} [config={}] 扩展的 AxiosRequestConfig
-     * @param {object} [config._data] 实现类似 jQuery.ajax 的 data 配置项机制
-     * @param {boolean} [config._jsonp] 是否通过 JSONP 来发送请求(注意此时 config 仅支持 baseURL, url, params, timeout, transformResponse 参数)
-     * @param {string} [config._jsonpCallback] name of the query string parameter to specify the callback(defaults to `callback`)
-     * @return {Promise}
+     * @param config
      */
-    send(config = {}) {
+    send(config: RequestConfig = {}): Promise<Response> {
         this._adapterDataOption(config);
 
-        var promise = null;
+        let promise = null;
         if (config._jsonp) {
             promise = this._jsonp({
                 method: 'get',
@@ -226,6 +256,7 @@ class StandardHttpClient {
             promise = this._dispatchRequest(config);
         }
 
+        // @ts-ignore
         return promise;
     }
 
@@ -234,18 +265,17 @@ class StandardHttpClient {
      * 
      * 当为 post/put/patch 请求时会将 config._data 转成 URL 编码的字符串
      * 
-     * @param {AxiosRequestConfig} 扩展的 AxiosRequestConfig
-     * @param {object} config._data 实现类似 jQuery.ajax 的 data 配置项机制
+     * @param config
      */
-    _adapterDataOption(config) {
+    _adapterDataOption(config: RequestConfig) {
         if (config._data) {
-            var method = '';
+            let method = '';
             if (config.method) {
                 method = config.method.toLowerCase();
             }
 
             // request methods 'PUT', 'POST', and 'PATCH' can send request body
-            var hasRequestBodyMethods = ['put', 'post', 'patch'];
+            const hasRequestBodyMethods = ['put', 'post', 'patch'];
             if (hasRequestBodyMethods.indexOf(method) !== -1) {
                 // 已有 config.data 时不做任何操作
                 if (!config.data) {
@@ -264,23 +294,18 @@ class StandardHttpClient {
     /**
      * 通过 JSONP 发送请求
      * 
-     * @param {object} config
-     * @param {string} config.url
-     * @param {string} [config.baseURL]
-     * @param {object} [config.params]
-     * @param {number} [config.timeout]
-     * @param {Array<Function>} [config.transformResponse]
-     * @param {string} [config._jsonpCallback]
-     * @return {Promise}
+     * @param config
      */
-    _jsonp(config) {
+    _jsonp(config: RequestConfig): Promise<AxiosResponse> {
         // Support baseURL config
-        var baseURL = config.baseURL || this.agent.defaults.baseURL;
+        const baseURL = config.baseURL || this.agent.defaults.baseURL;
+        // @ts-ignore
         if (baseURL && !isAbsoluteURL(config.url)) {
+            // @ts-ignore
             config.url = combineURLs(baseURL, config.url);
         }
 
-        var url = config.url;
+        let url = config.url;
         if (config.params) {
             url = new QsMan(url).append(config.params).toString();
         }
@@ -289,17 +314,19 @@ class StandardHttpClient {
             config.timeout = this.agent.defaults.timeout;
         }
 
-        var transformResponse = config.transformResponse || this.agent.defaults.transformResponse;
+        const transformResponse = config.transformResponse || this.agent.defaults.transformResponse;
 
-        var promise = fetchJsonp(url, {
+        // @ts-ignore
+        let promise = fetchJsonp(url, {
             timeout: config.timeout,
             jsonpCallback: config._jsonpCallback
         }).then(function(response) {
             return response.json();
         }).then(function(data) {
             // Support transformResponse config
-            var _data = data;
+            let _data = data;
             if (transformResponse && Object.prototype.toString.call(transformResponse) === '[object Array]') {
+                // @ts-ignore
                 transformResponse.forEach(function(fn) {
                     _data = fn(_data);
                 });
@@ -323,16 +350,19 @@ class StandardHttpClient {
         // 兼容 axios 的 Interceptors 机制
         // https://github.com/axios/axios/blob/master/lib/core/Axios.js
         // 首先放入发送请求的 promise
-        var chain = [promise, undefined];
+        const chain = [promise, undefined];
         // 在链路的前面加入 intercept request
+        // @ts-ignore
         this.agent.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
             chain.unshift(interceptor.fulfilled, interceptor.rejected);
         });
         // 在链路的后面加入 intercept response
+        // @ts-ignore
         this.agent.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
             chain.push(interceptor.fulfilled, interceptor.rejected);
         });
         while (chain.length) {
+            // @ts-ignore
             promise = promise.then(chain.shift(), chain.shift());
         }
 
@@ -342,10 +372,9 @@ class StandardHttpClient {
     /**
      * Dispatch a request to the server.
      * 
-     * @param {AxiosRequestConfig} config
-     * @return {Promise}
+     * @param config
      */
-    _dispatchRequest(config) {
+    _dispatchRequest(config: RequestConfig): Promise<AxiosResponse> {
         // axios promise 链: [...interceptors.request, dispatch request, ...interceptors.response]
         return this.agent(config);
     }
@@ -353,11 +382,10 @@ class StandardHttpClient {
     /**
      * 判断接口调用是否成功
      * 
-     * @param {AxiosResponse} response
-     * @return {boolean}
+     * @param response
      */
-    _isApiSuccess(response) {
-        var result = response.data;
+    _isApiSuccess(response: AxiosResponse): boolean {
+        const result = response.data;
         // 判断接口调用是否成功的依据
         // 1. 返回的数据应该是一个 object
         // 2. 要么没有 status 字段, 要么 status 字段等于 0

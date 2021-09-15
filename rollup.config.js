@@ -1,14 +1,11 @@
 import commonjs from 'rollup-plugin-commonjs';
 import nodeResolve from 'rollup-plugin-node-resolve';
-import babel from 'rollup-plugin-babel';
+import typescript from '@rollup/plugin-typescript';
 import {
     uglify
 } from 'rollup-plugin-uglify';
 
-var input = 'src/standard-http-client.js';
-var babelPlugin = babel({
-    exclude: 'node_modules/**'
-});
+var input = 'src/standard-http-client.ts';
 
 export default [{
     input: input,
@@ -22,7 +19,7 @@ export default [{
             browser: true
         }),
         commonjs(),
-        babelPlugin,
+        typescript(),
         uglify()
     ]
 }, {
@@ -32,7 +29,8 @@ export default [{
         format: 'cjs'
     },
     plugins: [
-        babelPlugin
+        commonjs(),
+        typescript(),
     ]
 }, {
     input: input,
@@ -41,6 +39,7 @@ export default [{
         format: 'esm'
     },
     plugins: [
-        babelPlugin
+        commonjs(),
+        typescript(),
     ]
 }];
