@@ -42,6 +42,15 @@ app.get('/api-response-not-standard', function (request, response) {
     });
 });
 
+app.get('/api-response-bigint', function (request, response) {
+    response.send(`{
+        "status": 0,
+        "data": {
+            "id": 9223372036854775807
+        }
+    }`)
+});
+
 app.listen(port, function() {
     console.log(`Mock server starting on port ${port}!`);
 });

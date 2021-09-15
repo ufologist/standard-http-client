@@ -203,6 +203,16 @@ describe('接口调用', function() {
             expect(error._errorCode.charAt(0)).toBe('C');
         }
     });
+
+    test('接口返回 bigint 超出 JS number 类型的数据范围', async () => {
+        var shc = new StandardHttpClient();
+
+        var [data] = await shc.send({
+            url: 'http://localhost:8000/api-response-bigint'
+        });
+
+        expect(data.id).toBe('9223372036854775807');
+    });
 });
 
 describe('适配 _data 参数', function() {

@@ -1,9 +1,26 @@
 import axios from 'axios';
 import fetchJsonp from 'fetch-jsonp';
 import QsMan from 'qsman';
+import JSONBigint from 'json-bigint';
+const JSONBigintString = JSONBigint({
+    storeAsString: true
+});
 
 import isAbsoluteURL from './helpers/isAbsoluteURL.js';
 import combineURLs from './helpers/combineURLs.js';
+
+function transformResponse(data) {
+    if (typeof data === 'string') {
+        try {
+            // 将 bigint 的数据转成字符串类型
+            data = JSONBigintString.parse(data);
+            // 还原数据
+            data = JSON.stringify(data);
+        } catch (e) {
+        }
+    }
+    return data;
+}
 
 /**
  * 符合接口规范的 HTTP 客户端
@@ -210,6 +227,43 @@ class StandardHttpClient {
      */
     send(config = {}) {
         this._adapterDataOption(config);
+
+        // TODO 有没有可能检测出有大数字的时候, 才用 JSONBigintString
+        // if (string.length > 15)
+        // https://github.com/sidorares/json-bigint/blob/master/lib/parse.js
+        if (config.transformResponse) {
+            config.transformResponse.unshift(function transformResponse(data) {
+                if (typeof data === 'string') {
+                    try {
+                        data = JSONBigintString.parse(data);
+                        data = JSON.stringify(data);
+                    } catch (e) {
+                    }
+                }
+                return data;
+            });
+        } else if (this.agent.defaults.transformResponse) {
+            config.transformResponse = [function transformResponse(data) {
+                if (typeof data === 'string') {
+                    try {
+                        data = JSONBigintString.parse(data);
+                        data = JSON.stringify(data);
+                    } catch (e) {
+                    }
+                }
+                return data;
+            }, this.agent.defaults.transformResponse];
+        } else {
+            config.transformResponse = [function transformResponse(data) {
+                if (typeof data === 'string') {
+                    try {
+                        data = JSONBigintString.parse(data);
+                    } catch (e) {
+                    }
+                }
+                return data;
+            }];
+        }
 
         var promise = null;
         if (config._jsonp) {
