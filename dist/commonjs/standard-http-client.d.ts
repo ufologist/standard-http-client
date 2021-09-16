@@ -2,7 +2,7 @@ import { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'ax
 /**
  * 扩展的 AxiosRequestConfig
  */
-interface RequestConfig extends AxiosRequestConfig {
+export interface RequestConfig extends AxiosRequestConfig {
     /**
      * 实现类似 jQuery.ajax 的 data 配置项机制
      */
