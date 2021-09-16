@@ -1,5 +1,9 @@
 # CHANGELOG
 
+* v1.0.0 2021-9-16
+
+  * refactor: 重构为 TS
+
 * v0.0.5 2020-7-21
 
   * feat: 兼容返回的数据中直接使用 message 字段作为提示

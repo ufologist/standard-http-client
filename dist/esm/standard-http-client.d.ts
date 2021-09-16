@@ -45,21 +45,21 @@ declare class StandardHttpClient {
     /**
      * 通过拦截器判断接口调用是否成功
      */
-    _isResponseSuccess(): void;
+    private _isResponseSuccess;
     /**
      * 通过拦截器描述请求的错误信息
      */
-    _descResponseError(): void;
+    private _descResponseError;
     /**
      * 描述客户端错误
      *
      * @param {Error} error
      */
-    _descClientError(error: any): void;
+    private _descClientError;
     /**
      * 通过拦截器输出请求的错误日志
      */
-    _logResponseError(): void;
+    private _logResponseError;
     /**
      * 通过拦截器增加发送请求的 hook
      *
@@ -69,32 +69,32 @@ declare class StandardHttpClient {
      *                     └─> 失败 ─> afterSend
      * ```
      */
-    _hook(): void;
+    private _hook;
     /**
      * 通过拦截器处理请求的错误
      */
-    _handleError(): void;
+    private _handleError;
     /**
      * 发送请求之前统一要做的事情
      *
      * @abstract
      * @param config
      */
-    beforeSend(config: AxiosRequestConfig): void;
+    protected beforeSend(config: AxiosRequestConfig): void;
     /**
      * 请求完成之后统一要做的事情
      *
      * @abstract
      * @param responseOrError
      */
-    afterSend(responseOrError: AxiosResponse | AxiosError): void;
+    protected afterSend(responseOrError: AxiosResponse | AxiosError): void;
     /**
      * 请求出错之后如何处理错误
      *
      * @abstract
      * @param error
      */
-    handleError(error: AxiosError): void;
+    protected handleError(error: AxiosError): void;
     /**
      * 发送请求
      *
@@ -108,24 +108,24 @@ declare class StandardHttpClient {
      *
      * @param config
      */
-    _adapterDataOption(config: RequestConfig): void;
+    private _adapterDataOption;
     /**
      * 通过 JSONP 发送请求
      *
      * @param config
      */
-    _jsonp(config: RequestConfig): Promise<AxiosResponse>;
+    private _jsonp;
     /**
      * Dispatch a request to the server.
      *
      * @param config
      */
-    _dispatchRequest(config: RequestConfig): Promise<AxiosResponse>;
+    private _dispatchRequest;
     /**
      * 判断接口调用是否成功
      *
      * @param response
      */
-    _isApiSuccess(response: AxiosResponse): boolean;
+    private _isApiSuccess;
 }
 export default StandardHttpClient;

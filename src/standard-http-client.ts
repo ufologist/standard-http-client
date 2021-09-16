@@ -71,7 +71,7 @@ class StandardHttpClient {
     /**
      * 通过拦截器判断接口调用是否成功
      */
-    _isResponseSuccess() {
+    private _isResponseSuccess() {
         // @ts-ignore
         this.agent.interceptors.response.use((response: any) => {
             const result = response.data;
@@ -98,7 +98,7 @@ class StandardHttpClient {
     /**
      * 通过拦截器描述请求的错误信息
      */
-    _descResponseError() {
+    private _descResponseError() {
         this.agent.interceptors.response.use(undefined, (error) => {
             // 如果 transformResponse 执行异常, 进入到拦截器做错误处理,
             // 此时的 error 是没有 config 的,
@@ -143,7 +143,7 @@ class StandardHttpClient {
      * 
      * @param {Error} error 
      */
-    _descClientError(error: any) {
+    private _descClientError(error: any) {
         error._desc = '客户端处理出错';
         error._errorType = 'C';
         error._errorNumber = error.message.charCodeAt(0);
@@ -153,7 +153,7 @@ class StandardHttpClient {
     /**
      * 通过拦截器输出请求的错误日志
      */
-    _logResponseError() {
+    private _logResponseError() {
         this.agent.interceptors.response.use(undefined, function(error) {
             const method = error.config ? error.config.method : undefined;
             const url = error.config ? error.config.url : undefined;
@@ -177,7 +177,7 @@ class StandardHttpClient {
      *                     └─> 失败 ─> afterSend
      * ```
      */
-    _hook() {
+    private _hook() {
         this.agent.interceptors.request.use((config) => {
             this.beforeSend(config);
             return config;
@@ -195,7 +195,7 @@ class StandardHttpClient {
     /**
      * 通过拦截器处理请求的错误
      */
-    _handleError() {
+    private _handleError() {
         this.agent.interceptors.response.use(undefined, (error) => {
             try {
                 this.handleError(error);
@@ -217,21 +217,21 @@ class StandardHttpClient {
      * @abstract
      * @param config 
      */
-    beforeSend(config: AxiosRequestConfig) {}
+    protected beforeSend(config: AxiosRequestConfig) {}
     /**
      * 请求完成之后统一要做的事情
      * 
      * @abstract
      * @param responseOrError 
      */
-    afterSend(responseOrError: AxiosResponse | AxiosError) {}
+    protected afterSend(responseOrError: AxiosResponse | AxiosError) {}
     /**
      * 请求出错之后如何处理错误
      * 
      * @abstract
      * @param error
      */
-    handleError(error: AxiosError) {}
+    protected handleError(error: AxiosError) {}
 
     /**
      * 发送请求
@@ -267,7 +267,7 @@ class StandardHttpClient {
      * 
      * @param config
      */
-    _adapterDataOption(config: RequestConfig) {
+    private _adapterDataOption(config: RequestConfig) {
         if (config._data) {
             let method = '';
             if (config.method) {
@@ -296,7 +296,7 @@ class StandardHttpClient {
      * 
      * @param config
      */
-    _jsonp(config: RequestConfig): Promise<AxiosResponse> {
+    private _jsonp(config: RequestConfig): Promise<AxiosResponse> {
         // Support baseURL config
         const baseURL = config.baseURL || this.agent.defaults.baseURL;
         // @ts-ignore
@@ -374,7 +374,7 @@ class StandardHttpClient {
      * 
      * @param config
      */
-    _dispatchRequest(config: RequestConfig): Promise<AxiosResponse> {
+    private _dispatchRequest(config: RequestConfig): Promise<AxiosResponse> {
         // axios promise 链: [...interceptors.request, dispatch request, ...interceptors.response]
         return this.agent(config);
     }
@@ -384,7 +384,7 @@ class StandardHttpClient {
      * 
      * @param response
      */
-    _isApiSuccess(response: AxiosResponse): boolean {
+    private _isApiSuccess(response: AxiosResponse): boolean {
         const result = response.data;
         // 判断接口调用是否成功的依据
         // 1. 返回的数据应该是一个 object
