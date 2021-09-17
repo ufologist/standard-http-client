@@ -1,5 +1,9 @@
 # CHANGELOG
 
+* v1.0.1 2021-9-17
+
+  * refactor: 增加错误的类型描述
+
 * v1.0.0 2021-9-16
 
   * refactor: 重构为 TS

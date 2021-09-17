@@ -157,7 +157,7 @@ class StandardHttpClient {
     /**
      * 描述客户端错误
      * 
-     * @param {Error} error 
+     * @param error 
      */
     private _descClientError(error: RequestError) {
         this._descRequestError(error, '客户端处理出错', 'C');

@@ -40,17 +40,21 @@ var StandardHttpClient = /** @class */ (function () {
         var _this = this;
         // @ts-ignore
         this.agent.interceptors.response.use(function (response) {
+            var _a;
             var result = response.data;
             if (_this._isApiSuccess(response)) {
                 return Promise.resolve([result.data, response]);
             }
             else {
-                var message = '接口调用出错但未提供错误信息';
-                if (result && result.statusInfo && result.statusInfo.message) {
+                var message = '';
+                if ((_a = result === null || result === void 0 ? void 0 : result.statusInfo) === null || _a === void 0 ? void 0 : _a.message) {
                     message = result.statusInfo.message;
                 }
-                else if (result && result.message) {
+                else if (result === null || result === void 0 ? void 0 : result.message) {
                     message = result.message;
+                }
+                else {
+                    message = '接口调用出错但未提供错误信息';
                 }
                 var error = new Error(message);
                 error.response = response;
@@ -66,6 +70,7 @@ var StandardHttpClient = /** @class */ (function () {
     StandardHttpClient.prototype._descResponseError = function () {
         var _this = this;
         this.agent.interceptors.response.use(undefined, function (error) {
+            var _a;
             // 如果 transformResponse 执行异常, 进入到拦截器做错误处理,
             // 此时的 error 是没有 config 的,
             // 因为 transformResponse 是客户端执行的逻辑, 因此认定为客户端处理出错
@@ -74,44 +79,48 @@ var StandardHttpClient = /** @class */ (function () {
                 var response = error.response;
                 if (response) { // 请求发送成功, 即前端能够拿到 HTTP 请求返回的数据
                     if (validateStatus && validateStatus(response.status)) { // HTTP 成功, 但接口调用出错
-                        // 错误描述
-                        error._desc = '接口调用出错';
-                        // 错误分类
-                        error._errorType = 'B';
-                        // 错误编号
                         // 如果接口调用出错但未提供错误编号, 错误编号默认为 0
-                        error._errorNumber = response.data && response.data.status ?
-                            response.data.status : 0;
+                        _this._descRequestError(error, '接口调用出错', 'B', ((_a = response.data) === null || _a === void 0 ? void 0 : _a.status) || 0);
                     }
                     else { // HTTP 异常
-                        error._desc = '网络请求错误';
-                        error._errorType = 'H';
-                        error._errorNumber = response.status;
+                        _this._descRequestError(error, '网络请求错误', 'H', response.status);
                     }
                 }
                 else { // 请求发送失败
-                    error._desc = '网络请求失败';
-                    error._errorType = 'A';
-                    error._errorNumber = error.message.charCodeAt(0);
+                    _this._descRequestError(error, '网络请求失败', 'A');
                 }
             }
             else {
                 _this._descClientError(error);
             }
-            // 错误码
-            error._errorCode = "" + error._errorType + error._errorNumber;
             return Promise.reject(error);
         });
     };
     /**
      * 描述客户端错误
      *
-     * @param {Error} error
+     * @param error
      */
     StandardHttpClient.prototype._descClientError = function (error) {
-        error._desc = '客户端处理出错';
-        error._errorType = 'C';
-        error._errorNumber = error.message.charCodeAt(0);
+        this._descRequestError(error, '客户端处理出错', 'C');
+    };
+    /**
+     * 描述请求错误
+     *
+     * @param error
+     */
+    StandardHttpClient.prototype._descRequestError = function (error, desc, errorType, errorNumber) {
+        var _a, _b;
+        if (desc === void 0) { desc = '接口调用出错'; }
+        if (errorType === void 0) { errorType = 'H'; }
+        error._desc = desc;
+        error._errorType = errorType;
+        if (typeof errorNumber === 'undefined') {
+            error._errorNumber = ((_b = (_a = error.message) === null || _a === void 0 ? void 0 : _a.charCodeAt) === null || _b === void 0 ? void 0 : _b.call(_a, 0)) || 0;
+        }
+        else {
+            error._errorNumber = errorNumber;
+        }
         error._errorCode = "" + error._errorType + error._errorNumber;
     };
     /**
@@ -119,9 +128,8 @@ var StandardHttpClient = /** @class */ (function () {
      */
     StandardHttpClient.prototype._logResponseError = function () {
         this.agent.interceptors.response.use(undefined, function (error) {
-            var method = error.config ? error.config.method : undefined;
-            var url = error.config ? error.config.url : undefined;
-            console.warn(error._desc + "(" + error._errorCode + ")", method, url, error.message, error.config, error.response, error);
+            var _a, _b;
+            console.warn(error._desc + "(" + error._errorCode + ")", (_a = error.config) === null || _a === void 0 ? void 0 : _a.method, (_b = error.config) === null || _b === void 0 ? void 0 : _b.url, error.message, error.config, error.response, error);
             return Promise.reject(error);
         });
     };
@@ -222,11 +230,9 @@ var StandardHttpClient = /** @class */ (function () {
      * @param config
      */
     StandardHttpClient.prototype._adapterDataOption = function (config) {
+        var _a, _b;
         if (config._data) {
-            var method = '';
-            if (config.method) {
-                method = config.method.toLowerCase();
-            }
+            var method = ((_b = (_a = config.method) === null || _a === void 0 ? void 0 : _a.toLowerCase) === null || _b === void 0 ? void 0 : _b.call(_a)) || '';
             // request methods 'PUT', 'POST', and 'PATCH' can send request body
             var hasRequestBodyMethods = ['put', 'post', 'patch'];
             if (hasRequestBodyMethods.indexOf(method) !== -1) {

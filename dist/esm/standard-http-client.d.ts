@@ -17,6 +17,31 @@ export interface RequestConfig extends AxiosRequestConfig {
     _jsonpCallback?: string;
 }
 /**
+ * 错误分类
+ */
+declare type ErrorType = 'H' | 'B' | 'A' | 'C';
+/**
+ * 扩展的 AxiosError
+ */
+export interface RequestError extends AxiosError {
+    /**
+     * 错误分类的描述, 例如: 接口调用出错
+     */
+    _desc?: string;
+    /**
+     * 错误分类, 例如: H
+     */
+    _errorType?: ErrorType;
+    /**
+     * 错误编号, 例如: 404
+     */
+    _errorNumber?: string | number;
+    /**
+     * 错误码, 例如: H404
+     */
+    _errorCode?: string;
+}
+/**
  * 返回的请求结果
  */
 declare type Response = [data: any, response: AxiosResponse];
@@ -53,9 +78,15 @@ declare class StandardHttpClient {
     /**
      * 描述客户端错误
      *
-     * @param {Error} error
+     * @param error
      */
     private _descClientError;
+    /**
+     * 描述请求错误
+     *
+     * @param error
+     */
+    private _descRequestError;
     /**
      * 通过拦截器输出请求的错误日志
      */
@@ -87,14 +118,14 @@ declare class StandardHttpClient {
      * @abstract
      * @param responseOrError
      */
-    protected afterSend(responseOrError: AxiosResponse | AxiosError): void;
+    protected afterSend(responseOrError: AxiosResponse | RequestError): void;
     /**
      * 请求出错之后如何处理错误
      *
      * @abstract
      * @param error
      */
-    protected handleError(error: AxiosError): void;
+    protected handleError(error: RequestError): void;
     /**
      * 发送请求
      *
