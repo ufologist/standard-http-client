@@ -30,6 +30,33 @@ export interface RequestConfig extends AxiosRequestConfig {
 }
 
 /**
+ * 错误分类
+ */
+type ErrorType = 'H' | 'B' | 'A' | 'C';
+
+/**
+ * 扩展的 AxiosError
+ */
+export interface RequestError extends AxiosError {
+    /**
+     * 错误分类的描述, 例如: 接口调用出错
+     */
+    _desc?: string;
+    /**
+     * 错误分类, 例如: H
+     */
+    _errorType?: ErrorType;
+    /**
+     * 错误编号, 例如: 404
+     */
+    _errorNumber?: string | number;
+    /**
+     * 错误码, 例如: H404
+     */
+    _errorCode?: string,
+}
+
+/**
  * 返回的请求结果
  */
 type Response = [data: any, response: AxiosResponse];
@@ -73,16 +100,18 @@ class StandardHttpClient {
      */
     private _isResponseSuccess() {
         // @ts-ignore
-        this.agent.interceptors.response.use((response: any) => {
+        this.agent.interceptors.response.use((response: AxiosResponse) => {
             const result = response.data;
             if (this._isApiSuccess(response)) {
                 return Promise.resolve([result.data, response]);
             } else {
-                let message = '接口调用出错但未提供错误信息';
-                if (result && result.statusInfo && result.statusInfo.message) {
+                let message = '';
+                if (result?.statusInfo?.message) {
                     message = result.statusInfo.message;
-                } else if (result && result.message) {
+                } else if (result?.message) {
                     message = result.message;
+                } else {
+                    message = '接口调用出错但未提供错误信息';
                 }
 
                 const error: any = new Error(message);
@@ -99,7 +128,7 @@ class StandardHttpClient {
      * 通过拦截器描述请求的错误信息
      */
     private _descResponseError() {
-        this.agent.interceptors.response.use(undefined, (error) => {
+        this.agent.interceptors.response.use(undefined, (error: RequestError) => {
             // 如果 transformResponse 执行异常, 进入到拦截器做错误处理,
             // 此时的 error 是没有 config 的,
             // 因为 transformResponse 是客户端执行的逻辑, 因此认定为客户端处理出错
@@ -109,30 +138,17 @@ class StandardHttpClient {
                 const response = error.response;
                 if (response) { // 请求发送成功, 即前端能够拿到 HTTP 请求返回的数据
                     if (validateStatus && validateStatus(response.status)) { // HTTP 成功, 但接口调用出错
-                        // 错误描述
-                        error._desc = '接口调用出错';
-                        // 错误分类
-                        error._errorType = 'B';
-                        // 错误编号
                         // 如果接口调用出错但未提供错误编号, 错误编号默认为 0
-                        error._errorNumber = response.data && response.data.status ?
-                                             response.data.status : 0;
+                        this._descRequestError(error, '接口调用出错', 'B', response.data?.status || 0);
                     } else { // HTTP 异常
-                        error._desc = '网络请求错误';
-                        error._errorType = 'H';
-                        error._errorNumber = response.status;
+                        this._descRequestError(error, '网络请求错误', 'H', response.status);
                     }
                 } else { // 请求发送失败
-                    error._desc = '网络请求失败';
-                    error._errorType = 'A';
-                    error._errorNumber = error.message.charCodeAt(0);
+                    this._descRequestError(error, '网络请求失败', 'A');
                 }
             } else {
                 this._descClientError(error);
             }
-
-            // 错误码
-            error._errorCode = `${error._errorType}${error._errorNumber}`;
 
             return Promise.reject(error);
         });
@@ -143,10 +159,25 @@ class StandardHttpClient {
      * 
      * @param {Error} error 
      */
-    private _descClientError(error: any) {
-        error._desc = '客户端处理出错';
-        error._errorType = 'C';
-        error._errorNumber = error.message.charCodeAt(0);
+    private _descClientError(error: RequestError) {
+        this._descRequestError(error, '客户端处理出错', 'C');
+    }
+
+    /**
+     * 描述请求错误
+     * 
+     * @param error 
+     */
+    private _descRequestError(error: RequestError, desc: string = '接口调用出错', errorType: ErrorType = 'H', errorNumber?: string | number) {
+        error._desc = desc;
+        error._errorType = errorType;
+
+        if (typeof errorNumber === 'undefined') {
+            error._errorNumber = error.message?.charCodeAt?.(0) || 0;
+        } else {
+            error._errorNumber = errorNumber;
+        }
+
         error._errorCode = `${error._errorType}${error._errorNumber}`;
     }
 
@@ -154,14 +185,13 @@ class StandardHttpClient {
      * 通过拦截器输出请求的错误日志
      */
     private _logResponseError() {
-        this.agent.interceptors.response.use(undefined, function(error) {
-            const method = error.config ? error.config.method : undefined;
-            const url = error.config ? error.config.url : undefined;
-
+        this.agent.interceptors.response.use(undefined, function(error: RequestError) {
             console.warn(`${error._desc}(${error._errorCode})`,  
-                         method, url,
+                         error.config?.method,
+                         error.config?.url,
                          error.message,
-                         error.config, error.response,
+                         error.config,
+                         error.response,
                          error);
 
             return Promise.reject(error);
@@ -224,14 +254,14 @@ class StandardHttpClient {
      * @abstract
      * @param responseOrError 
      */
-    protected afterSend(responseOrError: AxiosResponse | AxiosError) {}
+    protected afterSend(responseOrError: AxiosResponse | RequestError) {}
     /**
      * 请求出错之后如何处理错误
      * 
      * @abstract
      * @param error
      */
-    protected handleError(error: AxiosError) {}
+    protected handleError(error: RequestError) {}
 
     /**
      * 发送请求
@@ -269,10 +299,7 @@ class StandardHttpClient {
      */
     private _adapterDataOption(config: RequestConfig) {
         if (config._data) {
-            let method = '';
-            if (config.method) {
-                method = config.method.toLowerCase();
-            }
+            const method = config.method?.toLowerCase?.() || '';
 
             // request methods 'PUT', 'POST', and 'PATCH' can send request body
             const hasRequestBodyMethods = ['put', 'post', 'patch'];
