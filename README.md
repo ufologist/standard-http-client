@@ -36,6 +36,7 @@
   * `GET` 请求时, 适配到 axios 的 `params` 配置项上
   * `POST/PUT/PATCH` 请求时, 将对象转成 `form-urlencoded` 的字符串, 适配到 axios 的 `data` 配置项上
   * PS: 针对其他情况, 例如需要传 `JSON` 数据时, 请使用 axios 原有的 `data` 配置项
+* 扩展 axios 的配置项 `_interceptDuplicateRequest`: 可拦截重复请求
 
 ## 示例
 
@@ -52,6 +53,14 @@ httpClient.send({ // axios Request Config
     url: 'https://domain.com/path/to/api'
 }).then(function([data, response]) {
     // 注意: 这里的 data 是接口规范中的 data 字段, 即接口返回的业务数据
+    console.log(data);
+});
+
+httpClient.send({
+    url: 'https://domain.com/path/to/api',
+    // 拦截重复请求
+    _interceptDuplicateRequest: true
+}).then(function([data, response]) {
     console.log(data);
 });
 

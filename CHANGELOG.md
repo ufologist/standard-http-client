@@ -1,5 +1,9 @@
 # CHANGELOG
 
+* v1.1.0 2021-9-22
+
+  * feat: 请求时新增 `_interceptDuplicateRequest` 参数可拦截重复请求
+
 * v1.0.1 2021-9-17
 
   * refactor: 增加错误的类型描述

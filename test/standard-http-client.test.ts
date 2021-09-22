@@ -460,3 +460,74 @@ describe('继承', function() {
         }
     });
 });
+
+describe('重复请求', function() {
+    test('不拦截重复请求', (done) => {
+        const callback = jest.fn();
+        const shc = new StandardHttpClient();
+
+        function serviceApi() {
+            return shc.send({
+                // 默认不拦截重复请求
+                url: 'http://localhost:8000/api'
+            }).then(callback)
+              .finally(callback);
+        }
+
+        serviceApi();
+        // 重复请求
+        serviceApi();
+
+        setTimeout(() => {
+            expect(callback.mock.calls.length).toBe(4);
+            done();
+        }, 500);
+    });
+
+    test('拦截重复请求', (done) => {
+        const callback = jest.fn();
+        const shc = new StandardHttpClient();
+
+        function serviceApi() {
+            return shc.send({
+                _interceptDuplicateRequest: true,
+                url: 'http://localhost:8000/api'
+            }).then(callback)
+              .finally(callback);
+        }
+
+        serviceApi();
+        // 重复请求
+        serviceApi();
+
+        setTimeout(() => {
+            expect(callback.mock.calls.length).toBe(2);
+            done();
+        }, 500);
+    });
+
+    test('参数不一样不算重复请求', (done) => {
+        const callback = jest.fn();
+        const shc = new StandardHttpClient();
+
+        function serviceApi(id) {
+            return shc.send({
+                _interceptDuplicateRequest: true,
+                url: 'http://localhost:8000/api',
+                // 参数不一样不算重复请求
+                _data: {
+                    id
+                }
+            }).then(callback)
+              .finally(callback);
+        }
+
+        serviceApi(1);
+        serviceApi(2);
+
+        setTimeout(() => {
+            expect(callback.mock.calls.length).toBe(4);
+            done();
+        }, 500);
+    });
+});
