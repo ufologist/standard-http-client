@@ -11,6 +11,8 @@ beforeAll(function() {
         mockServer = spawn('node', ['test/mock-server.js']);
         mockServer.stdout.on('data', (data) => {
             console.log(`mockServer stdout: ${data}`);
+            // 屏蔽告警
+            console.warn = function() {};
             resolve(1);
         });
         mockServer.stderr.on('data', (data) => {
