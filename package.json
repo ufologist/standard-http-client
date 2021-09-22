@@ -16,7 +16,7 @@
     "prepublishOnly": "npm run build",
     "minor:beta": "release-it minor --preRelease=beta",
     "patch:beta": "release-it patch --preRelease=beta",
-    "release:beta": "release-it --preRelease --release-version",
+    "release:beta": "release-it --preRelease",
     "minor": "release-it minor",
     "patch": "release-it patch"
   },
