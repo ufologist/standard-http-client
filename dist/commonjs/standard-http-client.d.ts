@@ -8,6 +8,10 @@ export interface RequestConfig extends AxiosRequestConfig {
      */
     _data?: any;
     /**
+     * 是否拦截重复请求
+     */
+    _interceptDuplicateRequest?: boolean;
+    /**
      * 是否通过 JSONP 来发送请求(注意此时 config 仅支持 baseURL, url, params, timeout, transformResponse 参数)
      */
     _jsonp?: boolean;
@@ -55,6 +59,23 @@ declare class StandardHttpClient {
      * axios 的实例
      */
     agent: AxiosInstance;
+    /**
+     * 每个发送的请求都加入到队列中, 用于拦截重复请求
+     *
+     * 存储的数据结构为
+     *
+     * ```
+     * const requestFingerprint = fingerprint(`
+     *     ${RequestConfig.method}
+     *     ${RequestConfig.url}
+     *     ${RequestConfig.params || RequestConfig.data}
+     * `);
+     * {
+     *     requestFingerprint: RequestConfig
+     * }
+     * ```
+     */
+    private _requestQueue;
     /**
      * 创建 HTTP 客户端的实例
      *
@@ -140,6 +161,31 @@ declare class StandardHttpClient {
      * @param config
      */
     private _adapterDataOption;
+    /**
+     * 获取请求的指纹特征
+     *
+     * @param config
+     * @returns
+     */
+    private _getRequestFingerprint;
+    /**
+     * 判定是否为重复请求
+     *
+     * @param config
+     */
+    private _isDuplicateRequest;
+    /**
+     * 将请求加入到队列中
+     *
+     * @param config
+     */
+    private _addRequestToQueue;
+    /**
+     * 将请求从队列中移除
+     *
+     * @param config
+     */
+    private _removeRequestFromQueue;
     /**
      * 通过 JSONP 发送请求
      *

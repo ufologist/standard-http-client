@@ -15,6 +15,7 @@ var StandardHttpClient = /** @class */ (function () {
      * @param config
      */
     function StandardHttpClient(config) {
+        this._requestQueue = {};
         this.agent = axios.create(config);
         this.useInterceptors();
     }
@@ -199,8 +200,20 @@ var StandardHttpClient = /** @class */ (function () {
      * @param config
      */
     StandardHttpClient.prototype.send = function (config) {
+        var _this = this;
         if (config === void 0) { config = {}; }
         this._adapterDataOption(config);
+        // 尝试拦截重复请求
+        if (config._interceptDuplicateRequest) {
+            if (this._isDuplicateRequest(config)) {
+                console.warn('拦截到重复请求', config.method, config.url, config);
+                // 检测到重复请求, 不发送请求出去,
+                // 返回一个永远处于 pending 状态的 Promise,
+                // 这样就不会影响到业务逻辑
+                return new Promise(function () { });
+            }
+        }
+        this._addRequestToQueue(config);
         var promise = null;
         if (config._jsonp) {
             promise = this._jsonp({
@@ -216,6 +229,9 @@ var StandardHttpClient = /** @class */ (function () {
         else {
             promise = this._dispatchRequest(config);
         }
+        promise = promise.finally(function () {
+            _this._removeRequestFromQueue(config);
+        });
         // @ts-ignore
         return promise;
     };
@@ -246,6 +262,60 @@ var StandardHttpClient = /** @class */ (function () {
                 config.params = config.params || config._data;
             }
         }
+    };
+    /**
+     * 获取请求的指纹特征
+     *
+     * @param config
+     * @returns
+     */
+    StandardHttpClient.prototype._getRequestFingerprint = function (config) {
+        var paramsStringify = '';
+        var dataStringify = '';
+        // JSON.stringify 可能出现异常, 例如循环引用的对象
+        try {
+            paramsStringify = JSON.stringify(config.params);
+        }
+        catch (error) {
+            paramsStringify = String(config.params);
+            console.warn('序列化 `config.params` 出现异常', config.params);
+        }
+        try {
+            dataStringify = JSON.stringify(config.data);
+        }
+        catch (error) {
+            dataStringify = String(config.data);
+            console.warn('序列化 `config.data` 出现异常', config.data);
+        }
+        return config.method + " " + config.url + " " + paramsStringify + " " + dataStringify;
+    };
+    /**
+     * 判定是否为重复请求
+     *
+     * @param config
+     */
+    StandardHttpClient.prototype._isDuplicateRequest = function (config) {
+        var requestFingerprint = this._getRequestFingerprint(config);
+        return typeof this._requestQueue[requestFingerprint] !== 'undefined';
+        ;
+    };
+    /**
+     * 将请求加入到队列中
+     *
+     * @param config
+     */
+    StandardHttpClient.prototype._addRequestToQueue = function (config) {
+        var requestFingerprint = this._getRequestFingerprint(config);
+        this._requestQueue[requestFingerprint] = config;
+    };
+    /**
+     * 将请求从队列中移除
+     *
+     * @param config
+     */
+    StandardHttpClient.prototype._removeRequestFromQueue = function (config) {
+        var requestFingerprint = this._getRequestFingerprint(config);
+        delete this._requestQueue[requestFingerprint];
     };
     /**
      * 通过 JSONP 发送请求
